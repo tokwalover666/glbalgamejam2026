@@ -4,7 +4,7 @@ using VFX;
 
 public class TransitionScreen : MonoBehaviour
 {
-    [SerializeField] GameObject mainScreen;
+    [SerializeField] GameObject startScreen;
     [SerializeField] Animator animator;
 
     private bool isTransitioning = false;
@@ -25,13 +25,13 @@ public class TransitionScreen : MonoBehaviour
     {
         isTransitioning = true;
 
-        if (mainScreen.activeSelf)
+        if (startScreen.activeSelf)
         {
             animator.SetTrigger("Transition");
 
-            yield return new WaitForSeconds(3.5f);
+            yield return new WaitForSeconds(2.5f);
 
-            mainScreen.SetActive(false);
+            startScreen.SetActive(false);
         }
 
         isTransitioning = false;
