@@ -16,8 +16,8 @@ public class TransitionScreen : MonoBehaviour
         if (Input.GetMouseButtonDown(0)  && !isTransitioning)
         {
             //CameraShake.Shake(0.5f, 1f);
-            Debug.Log("Pressed left click.");
-            StartCoroutine(ClickStart());
+            //Debug.Log("Pressed left click.");
+            //StartCoroutine(ClickStart());
         }
     }
 
