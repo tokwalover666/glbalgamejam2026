@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class BoxSpawner : MonoBehaviour
 {
@@ -16,15 +16,23 @@ public class BoxSpawner : MonoBehaviour
     [Header("UI")]
     public TopViewPanelUI ui;
 
-    [Header("Options")]
-    public bool spawnOnStart = true;
+    [Header("Player Trigger")]
+    public CharacterMove player;   // assign the player here
 
     private BoxMove currentBox;
+    private bool hasSpawned = false;
 
-    void Start()
+    void Update()
     {
-        if (spawnOnStart)
+        if (hasSpawned) return;
+        if (player == null) return;
+
+        // 🔑 Spawn ONLY when player reaches final waypoint
+        if (player.finished)
+        {
             Spawn();
+            hasSpawned = true;
+        }
     }
 
     public void Spawn()
@@ -35,7 +43,11 @@ public class BoxSpawner : MonoBehaviour
             return;
         }
 
-        GameObject obj = Instantiate(boxPrefab, spawnPoint.position, Quaternion.Euler(spawnRotationEuler));
+        GameObject obj = Instantiate(
+            boxPrefab,
+            spawnPoint.position,
+            Quaternion.Euler(spawnRotationEuler)
+        );
 
         currentBox = obj.GetComponent<BoxMove>();
         if (currentBox == null)
@@ -51,9 +63,10 @@ public class BoxSpawner : MonoBehaviour
         }
 
         currentBox.Init(checkpointWaypoint, finalWaypoint, ui);
+
+        Debug.Log("[SPAWNER] Box spawned after player arrival.");
     }
 
-    // Optional helper if you need access
     public BoxMove GetCurrentBox()
     {
         return currentBox;

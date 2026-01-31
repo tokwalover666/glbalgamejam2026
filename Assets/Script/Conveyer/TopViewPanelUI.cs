@@ -2,34 +2,23 @@ using UnityEngine;
 
 public class TopViewPanelUI : MonoBehaviour
 {
-    [Header("Panels")]
-    public GameObject topDownPanel;
-    public GameObject otherPanel; // optional second panel
+    public GameObject panel;
+    public HoldToProgressTimer holdTimer;
 
-    public void ShowBoth()
+    public void ShowBoth(BoxMove box)
     {
-        if (topDownPanel != null) topDownPanel.SetActive(true);
-        if (otherPanel != null) otherPanel.SetActive(true);
+        if (panel != null) panel.SetActive(true);
+
+        if (holdTimer != null)
+        {
+            holdTimer.boxMove = box;
+            holdTimer.ui = this;     // so it can hide the panel on finish
+            holdTimer.ResetHold();
+        }
     }
 
     public void HideBoth()
     {
-        if (topDownPanel != null) topDownPanel.SetActive(false);
-        if (otherPanel != null) otherPanel.SetActive(false);
-    }
-
-    public void ShowTopDownOnly()
-    {
-        if (topDownPanel != null) topDownPanel.SetActive(true);
-    }
-
-    public void HideTopDownOnly()
-    {
-        if (topDownPanel != null) topDownPanel.SetActive(false);
-    }
-
-    public bool IsTopDownOpen()
-    {
-        return topDownPanel != null && topDownPanel.activeSelf;
+        if (panel != null) panel.SetActive(false);
     }
 }

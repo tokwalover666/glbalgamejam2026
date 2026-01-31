@@ -44,7 +44,7 @@ public class BoxMove : MonoBehaviour
                 if (Arrived(checkpoint.position))
                 {
                     state = BoxState.Wait;
-                    ui?.ShowBoth();
+                    ui?.ShowBoth(this);
                 }
                 break;
 
@@ -80,19 +80,27 @@ public class BoxMove : MonoBehaviour
     // Call from UI button
     public void GoToFinal()
     {
+        Debug.Log($"[BOX] GoToFinal() called on {name} (id={GetInstanceID()}) while state={state}");
+
         if (state == BoxState.Wait)
         {
             state = BoxState.MoveToFinal;
             ui?.HideBoth();
+            Debug.Log($"[BOX] State changed -> MoveToFinal for {name}");
+        }
+        else
+        {
+            Debug.LogWarning($"[BOX] Ignored GoToFinal() because state was {state} (needs Wait).");
         }
     }
+
 
     //  Optional: call this if you want to reopen the panel while waiting
     public void ReOpenPanelIfWaiting()
     {
         if (state == BoxState.Wait)
         {
-            ui?.ShowBoth();
+            ui?.ShowBoth(this);
         }
     }
 }
