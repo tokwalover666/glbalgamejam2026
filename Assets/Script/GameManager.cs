@@ -4,29 +4,28 @@ using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    [Header("Timer")]
+    [Header("Countdown Timer")]
     public float startTime = 30f;
-    private float currentTime;
-    private bool timerRunning = true;
-
-    [Header("Timer UI")]
     public TMP_Text timerText;
 
-    [Header("UI Panels")]
-    public GameObject pausePanel;
-    public GameObject settingsPanel;
-    public GameObject gameOverPanel;
+    [Header("Panels")]
+    public GameObject pausePanel;     // contains Resume / Settings / Exit buttons
+    public GameObject settingsPanel;  // contains Settings UI + Back button
+    public GameObject gameOverPanel;  // shows when timer hits 0
 
-    [Header("Exit Scene")]
-    public string exitSceneName = "MainMenu"; // set in Inspector
+    [Header("Exit")]
+    public string exitSceneName = "MainMenu"; // scene to load when Exit is clicked
+
+    float currentTime;
+    bool isGameOver = false;
 
     void Start()
     {
         currentTime = startTime;
 
-        pausePanel?.SetActive(false);
-        settingsPanel?.SetActive(false);
-        gameOverPanel?.SetActive(false);
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
 
         Time.timeScale = 1f;
         UpdateTimerText();
@@ -34,92 +33,109 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        HandleEscInput();
+        HandleEsc();
 
-        if (!timerRunning) return;
+        if (isGameOver) return;
 
+        // Countdown (will naturally pause when Time.timeScale = 0)
         currentTime -= Time.deltaTime;
 
         if (currentTime <= 0f)
         {
             currentTime = 0f;
-            GameOver();
+            TriggerGameOver();
         }
 
         UpdateTimerText();
     }
 
     // =========================
-    // ESC KEY
+    // ESC KEY LOGIC
     // =========================
-    void HandleEscInput()
+    void HandleEsc()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (!Input.GetKeyDown(KeyCode.Escape)) return;
+        if (isGameOver) return;
+
+        // If settings is open, ESC goes back to pause menu
+        if (settingsPanel != null && settingsPanel.activeSelf)
         {
-            if (pausePanel != null && pausePanel.activeSelf)
-                Resume();
-            else
-                OpenPause();
+            CloseSettings();
+            return;
         }
+
+        // Otherwise toggle pause menu
+        if (pausePanel != null && pausePanel.activeSelf)
+            Resume();
+        else
+            OpenPause();
     }
 
     // =========================
-    // TIMER DISPLAY
+    // TIMER UI
     // =========================
     void UpdateTimerText()
     {
         if (timerText == null) return;
 
-        int minutes = Mathf.FloorToInt(currentTime / 60f);
-        int seconds = Mathf.FloorToInt(currentTime % 60f);
+        float t = Mathf.Max(0f, currentTime);
+        int minutes = Mathf.FloorToInt(t / 60f);
+        int seconds = Mathf.FloorToInt(t % 60f);
 
         timerText.text = $"{minutes:00}:{seconds:00}";
     }
 
     // =========================
-    // GAME FLOW
+    // GAME OVER
     // =========================
-    void GameOver()
+    void TriggerGameOver()
     {
-        timerRunning = false;
+        isGameOver = true;
         Time.timeScale = 0f;
-        gameOverPanel?.SetActive(true);
+
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(true);
     }
 
     // =========================
-    // PAUSE
+    // PAUSE MENU (buttons)
     // =========================
     public void OpenPause()
     {
         Time.timeScale = 0f;
-        timerRunning = false;
-        pausePanel?.SetActive(true);
-        settingsPanel?.SetActive(false);
+
+        if (pausePanel != null) pausePanel.SetActive(true);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
     }
 
     public void Resume()
     {
         Time.timeScale = 1f;
-        timerRunning = true;
-        pausePanel?.SetActive(false);
-        settingsPanel?.SetActive(false);
+
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
     }
 
     // =========================
-    // SETTINGS
+    // SETTINGS (buttons)
     // =========================
     public void OpenSettings()
     {
-        settingsPanel?.SetActive(true);
+        // Keep pausePanel ON if you want it behind settings,
+        // or turn it OFF if you want settings alone. Here: settings alone.
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(true);
     }
 
     public void CloseSettings()
     {
-        settingsPanel?.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (pausePanel != null) pausePanel.SetActive(true);
     }
 
     // =========================
-    // EXIT (LOAD SCENE)
+    // EXIT (button)
     // =========================
     public void ExitToScene()
     {
@@ -127,7 +143,7 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(exitSceneName);
     }
 
-    // Optional: restart current level
+    // Optional: restart current scene (button on GameOver panel)
     public void RestartScene()
     {
         Time.timeScale = 1f;
