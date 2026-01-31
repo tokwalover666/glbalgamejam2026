@@ -17,7 +17,7 @@ public class AnimationManager : MonoBehaviour
     {
         if (kissZone.isPressingZone == true)
         {
-            girlAnim.Play("Kiss");
+            girlAnim.Play("GirlRotate");
         }
         else
         {
