@@ -179,9 +179,12 @@ ModelImporter:
   humanDescription:
     serializedVersion: 3
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< Updated upstream
     human: []
 =======
+=======
+>>>>>>> parent of ace65d8 (Merge remote-tracking branch 'origin/mai')
 =======
 >>>>>>> parent of ace65d8 (Merge remote-tracking branch 'origin/mai')
     human:
@@ -330,7 +333,10 @@ ModelImporter:
         length: 0
         modified: 0
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> parent of ace65d8 (Merge remote-tracking branch 'origin/mai')
 =======
 >>>>>>> parent of ace65d8 (Merge remote-tracking branch 'origin/mai')
     skeleton:
