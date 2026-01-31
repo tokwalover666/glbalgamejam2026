@@ -8,9 +8,15 @@ public class HoldToProgressTimer : MonoBehaviour
     [Header("Box Logic")]
     public BoxMove boxMove;
 
+    [Header("Debug")]
+    public bool debugLogs = true;
+    public float debugTickRate = 0.25f; // logs progress every X seconds while holding
+
     private float holdTimer = 0f;
     private bool isHolding = false;
     private bool completed = false;
+
+    private float nextDebugTime = 0f;
 
     void Update()
     {
@@ -20,25 +26,61 @@ public class HoldToProgressTimer : MonoBehaviour
         {
             holdTimer += Time.deltaTime;
 
+            // Debug: progress tick
+            if (debugLogs && Time.time >= nextDebugTime)
+            {
+                nextDebugTime = Time.time + debugTickRate;
+                Debug.Log($"[HOLD] Holding... {holdTimer:F2}/{holdDuration:F2} ({GetProgress01() * 100f:F0}%)");
+            }
+
+            // Finish
             if (holdTimer >= holdDuration)
             {
                 completed = true;
-                boxMove.GoToFinal();
+                isHolding = false;
+
+                if (debugLogs)
+                    Debug.Log($"[HOLD] FINISHED! Timer reached {holdDuration:F2}s. Calling boxMove.GoToFinal()");
+
+                if (boxMove != null)
+                {
+                    boxMove.GoToFinal();
+                }
+                else
+                {
+                    Debug.LogWarning("[HOLD] boxMove is NULL. Assign BoxMove in Inspector.");
+                }
             }
         }
-        // else: do nothing  timer pauses
+        // else: do nothing (timer pauses)
     }
 
-    // UI Button  Pointer Down
+    // UI Button -> EventTrigger -> PointerDown
     public void OnHoldStart()
     {
+        if (completed)
+        {
+            if (debugLogs) Debug.Log("[HOLD] OnHoldStart called, but already completed.");
+            return;
+        }
+
         isHolding = true;
+        nextDebugTime = Time.time; // so it logs immediately
+
+        if (debugLogs)
+            Debug.Log("[HOLD] START holding.");
     }
 
-    // UI Button  Pointer Up
+    // UI Button -> EventTrigger -> PointerUp
+    // (also add PointerExit if you want to stop when cursor leaves button)
     public void OnHoldEnd()
     {
+        if (!isHolding) return;
+
         isHolding = false;
+
+        if (debugLogs)
+            Debug.Log($"[HOLD] STOP holding at {holdTimer:F2}/{holdDuration:F2} ({GetProgress01() * 100f:F0}%).");
     }
 
     // Optional: reset if needed
@@ -46,9 +88,12 @@ public class HoldToProgressTimer : MonoBehaviour
     {
         holdTimer = 0f;
         completed = false;
+        isHolding = false;
+
+        if (debugLogs)
+            Debug.Log("[HOLD] ResetHold() called. Timer reset to 0.");
     }
 
-    // Debug helper (optional)
     public float GetProgress01()
     {
         return Mathf.Clamp01(holdTimer / holdDuration);

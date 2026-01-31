@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Animator))]
 public class CharacterMoveB : MonoBehaviour
 {
     [Header("Dependency")]
@@ -19,8 +20,7 @@ public class CharacterMoveB : MonoBehaviour
     public float rotationSpeed = 180f;
     public float waitAfterFirstRotate = 2f;
 
-    [Header("Animator")]
-    public Animator animator;
+    private Animator animator;
     public bool isMoving { get; private set; }
 
     Quaternion rotA;
@@ -42,8 +42,12 @@ public class CharacterMoveB : MonoBehaviour
 
     void Start()
     {
+        animator = GetComponent<Animator>(); // important
         rotA = Quaternion.Euler(firstRotateEuler);
         rotB = Quaternion.Euler(secondRotateEuler);
+
+        // optional: make sure it starts idle
+        animator.SetBool("isMoving", false);
     }
 
     void Update()
@@ -74,12 +78,14 @@ public class CharacterMoveB : MonoBehaviour
                 break;
 
             case State.Wait:
+                isMoving = false;
                 timer += Time.deltaTime;
                 if (timer >= waitAfterFirstRotate)
                     state = State.RotateSecond;
                 break;
 
             case State.RotateSecond:
+                isMoving = false;
                 Rotate(rotB);
                 if (RotationFinished(rotB))
                     state = State.MoveToLast;
@@ -98,8 +104,7 @@ public class CharacterMoveB : MonoBehaviour
                 break;
         }
 
-        if (animator != null)
-            animator.SetBool("IsMoving", isMoving);
+        animator.SetBool("isMoving", isMoving);
     }
 
     void MoveTo(Vector3 target)
