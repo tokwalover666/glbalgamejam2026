@@ -12,7 +12,7 @@ public class KissZone : MonoBehaviour
 
     private float holdTimer;
     private int score;
-    public bool isPressingZone;
+    private bool isPressingZone;
 
     private const float maxHoldTime = 2f;
     private const int maxScore = 10;

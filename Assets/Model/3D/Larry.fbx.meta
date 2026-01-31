@@ -178,9 +178,12 @@ ModelImporter:
   importAnimation: 1
   humanDescription:
     serializedVersion: 3
+<<<<<<< HEAD
 <<<<<<< Updated upstream
     human: []
 =======
+=======
+>>>>>>> parent of ace65d8 (Merge remote-tracking branch 'origin/mai')
     human:
     - boneName: Bone
       humanName: Hips
@@ -326,7 +329,10 @@ ModelImporter:
         value: {x: 0, y: 0, z: 0}
         length: 0
         modified: 0
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> parent of ace65d8 (Merge remote-tracking branch 'origin/mai')
     skeleton:
     - name: Larry(Clone)
       parentName: 
@@ -492,9 +498,9 @@ ModelImporter:
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 2
+  animationType: 3
   humanoidOversampling: 1
-  avatarSetup: 0
+  avatarSetup: 1
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
   importBlendShapeDeformPercent: 1
   remapMaterialsIfMaterialImportModeIsNone: 0
