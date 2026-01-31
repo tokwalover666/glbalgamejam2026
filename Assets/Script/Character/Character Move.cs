@@ -12,6 +12,7 @@ public class CharacterMove : MonoBehaviour
 
     [Header("Rotation")]
     public Vector3 rotateToEuler = new Vector3(0, 90, 0);
+<<<<<<< HEAD
     public float rotationSpeed = 180f;
 
 <<<<<<< Updated upstream
@@ -20,39 +21,44 @@ public class CharacterMove : MonoBehaviour
     //  THIS is what other characters will check
     public bool finished { get; private set; } = false;
 >>>>>>> Stashed changes
+=======
+    public float rotationSpeed = 180f; // degrees per second
+>>>>>>> parent of 8db5096 (character movement and animation)
 
     enum State
     {
         MoveToFirst,
         RotateAtFirst,
-        MoveToLast,
-        Done
+        MoveToLast
     }
 
     State state = State.MoveToFirst;
 
     void Update()
     {
-        if (finished) return;
-
         switch (state)
         {
             case State.MoveToFirst:
                 MoveTo(firstWaypoint.position);
 
                 if (Arrived(firstWaypoint.position))
+                {
                     state = State.RotateAtFirst;
+                }
                 break;
 
             case State.RotateAtFirst:
                 RotateInPlace();
 
                 if (RotationFinished())
+                {
                     state = State.MoveToLast;
+                }
                 break;
 
             case State.MoveToLast:
                 MoveTo(lastWaypoint.position);
+<<<<<<< HEAD
 
                 if (Arrived(lastWaypoint.position))
                 {
@@ -63,13 +69,23 @@ public class CharacterMove : MonoBehaviour
                     finished = true; //  SIGNAL COMPLETE
 >>>>>>> Stashed changes
                 }
+=======
+>>>>>>> parent of 8db5096 (character movement and animation)
                 break;
         }
     }
 
+    // =====================
+    // Helpers
+    // =====================
+
     void MoveTo(Vector3 target)
     {
-        transform.position = Vector3.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            target,
+            moveSpeed * Time.deltaTime
+        );
     }
 
     bool Arrived(Vector3 target)
@@ -80,7 +96,12 @@ public class CharacterMove : MonoBehaviour
     void RotateInPlace()
     {
         Quaternion targetRot = Quaternion.Euler(rotateToEuler);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
+
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            targetRot,
+            rotationSpeed * Time.deltaTime
+        );
     }
 
     bool RotationFinished()

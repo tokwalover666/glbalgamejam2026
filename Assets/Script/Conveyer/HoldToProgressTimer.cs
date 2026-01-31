@@ -2,38 +2,55 @@ using UnityEngine;
 
 public class HoldToProgressTimer : MonoBehaviour
 {
-    public float holdDuration = 2.5f;
+    [Header("Timing")]
+    public float holdDuration = 2.5f; // seconds required to complete
 
-    float t = 0f;
-    bool holding = false;
-    bool done = false;
+    [Header("Box Logic")]
+    public BoxMove boxMove;
+
+    private float holdTimer = 0f;
+    private bool isHolding = false;
+    private bool completed = false;
 
     void Update()
     {
-        if (done) return;
+        if (completed) return;
 
-        if (holding)
+        if (isHolding)
         {
-            t += Time.deltaTime;
+            holdTimer += Time.deltaTime;
 
-            if (t >= holdDuration)
+            if (holdTimer >= holdDuration)
             {
-                done = true;
-                holding = false;
-                GameManager.Instance?.OnHoldComplete();
+                completed = true;
+                boxMove.GoToFinal();
             }
         }
+        // else: do nothing  timer pauses
     }
 
-    public void OnHoldStart() => holding = true;
-    public void OnHoldEnd() => holding = false;
+    // UI Button  Pointer Down
+    public void OnHoldStart()
+    {
+        isHolding = true;
+    }
 
+    // UI Button  Pointer Up
+    public void OnHoldEnd()
+    {
+        isHolding = false;
+    }
+
+    // Optional: reset if needed
     public void ResetHold()
     {
-        t = 0f;
-        done = false;
-        holding = false;
+        holdTimer = 0f;
+        completed = false;
     }
 
-    public float GetProgress01() => Mathf.Clamp01(t / holdDuration);
+    // Debug helper (optional)
+    public float GetProgress01()
+    {
+        return Mathf.Clamp01(holdTimer / holdDuration);
+    }
 }

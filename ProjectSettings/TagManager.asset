@@ -5,8 +5,6 @@ TagManager:
   serializedVersion: 3
   tags:
   - Zone
-  - Checkpoint
-  - Package
   layers:
   - Default
   - TransparentFX

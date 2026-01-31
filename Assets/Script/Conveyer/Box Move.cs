@@ -1,55 +1,46 @@
 using UnityEngine;
 
-public class BoxMover : MonoBehaviour
+public class BoxMove : MonoBehaviour
 {
-    [Header("Waypoints")]
-    public Transform firstWaypoint;
-    public Transform lastWaypoint;
-
+    public Transform checkpoint;
+    public Transform finalPoint;
     public float speed = 3f;
-    public float arriveDistance = 0.1f;
+    public float arriveDistance = 0.05f;
 
-    private System.Action onFinished;
+    [Header("UI Panels")]
+    public TopViewPanelUI ui; // drag the object with TwoPanelUI here
 
-    // NEW: states
-    private enum State { MoveToFirst, Wait, MoveToLast }
-    private State state = State.MoveToFirst;
-
-    public void Init(Transform first, Transform last, System.Action finishedCallback)
+    public enum BoxState
     {
-        firstWaypoint = first;
-        lastWaypoint = last;
-        onFinished = finishedCallback;
-
-        state = State.MoveToFirst; // reset state on spawn
+        MoveToCheckpoint,
+        Wait,
+        MoveToFinal
     }
+
+    public BoxState state = BoxState.MoveToCheckpoint;
 
     void Update()
     {
-        if (firstWaypoint == null || lastWaypoint == null) return;
-
         switch (state)
         {
-            case State.MoveToFirst:
-                MoveTo(firstWaypoint.position);
+            case BoxState.MoveToCheckpoint:
+                Move(checkpoint.position);
 
-                if (Arrived(firstWaypoint.position))
+                if (Arrived(checkpoint.position))
                 {
-                    state = State.Wait;
-
-                    // Open hold UI and register THIS box as the active one
-                    GameManager.Instance?.OpenHoldForBox(this);
+                    state = BoxState.Wait;
+                    ui?.ShowBoth(); // show BOTH panels when waiting
                 }
                 break;
 
-            case State.Wait:
-                // do nothing, wait for player hold to complete
+            case BoxState.Wait:
+                // waiting for UI interaction later
                 break;
 
-            case State.MoveToLast:
-                MoveTo(lastWaypoint.position);
+            case BoxState.MoveToFinal:
+                Move(finalPoint.position);
 
-                if (Arrived(lastWaypoint.position))
+                if (Arrived(finalPoint.position))
                 {
                     Destroy(gameObject);
                 }
@@ -57,16 +48,7 @@ public class BoxMover : MonoBehaviour
         }
     }
 
-    public void ContinueToLast()
-    {
-        // Called by GameManager when hold completes
-        if (state == State.Wait)
-        {
-            state = State.MoveToLast;
-        }
-    }
-
-    void MoveTo(Vector3 target)
+    void Move(Vector3 target)
     {
         transform.position = Vector3.MoveTowards(
             transform.position,
@@ -80,9 +62,13 @@ public class BoxMover : MonoBehaviour
         return Vector3.Distance(transform.position, target) <= arriveDistance;
     }
 
-    void OnDestroy()
+    // Call from UI button
+    public void GoToFinal()
     {
-        // Notify spawner that this active box is gone
-        onFinished?.Invoke();
+        if (state == BoxState.Wait)
+        {
+            state = BoxState.MoveToFinal;
+            ui?.HideBoth(); // hide both once it continues
+        }
     }
 }

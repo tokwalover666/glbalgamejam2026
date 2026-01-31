@@ -4,36 +4,20 @@ using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
-
     [Header("Countdown Timer")]
     public float startTime = 30f;
     public TMP_Text timerText;
 
     [Header("Panels")]
-    public GameObject pausePanel;
-    public GameObject settingsPanel;
-    public GameObject gameOverPanel;
+    public GameObject pausePanel;     // contains Resume / Settings / Exit buttons
+    public GameObject settingsPanel;  // contains Settings UI + Back button
+    public GameObject gameOverPanel;  // shows when timer hits 0
 
     [Header("Exit")]
-    public string exitSceneName = "MainMenu";
-
-    // =========================
-    // NEW: HOLD UI
-    // =========================
-    [Header("Hold UI")]
-    public GameObject holdPanel;                // the mini panel that opens
-    public HoldToProgressTimer holdTimer;       // your hold timer script
-
-    private BoxMover activeBox;                 // the box currently waiting
+    public string exitSceneName = "MainMenu"; // scene to load when Exit is clicked
 
     float currentTime;
     bool isGameOver = false;
-
-    void Awake()
-    {
-        Instance = this;
-    }
 
     void Start()
     {
@@ -42,9 +26,6 @@ public class GameManager : MonoBehaviour
         if (pausePanel != null) pausePanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
-
-        // NEW
-        if (holdPanel != null) holdPanel.SetActive(false);
 
         Time.timeScale = 1f;
         UpdateTimerText();
@@ -56,6 +37,7 @@ public class GameManager : MonoBehaviour
 
         if (isGameOver) return;
 
+        // Countdown (will naturally pause when Time.timeScale = 0)
         currentTime -= Time.deltaTime;
 
         if (currentTime <= 0f)
@@ -68,33 +50,6 @@ public class GameManager : MonoBehaviour
     }
 
     // =========================
-    // NEW: OPEN HOLD FOR BOX
-    // =========================
-    public void OpenHoldForBox(BoxMover box)
-    {
-        activeBox = box;
-
-        if (holdTimer != null)
-            holdTimer.ResetHold();
-
-        if (holdPanel != null)
-            holdPanel.SetActive(true);
-    }
-
-    // Called by HoldToProgressTimer when completed
-    public void OnHoldComplete()
-    {
-        if (holdPanel != null)
-            holdPanel.SetActive(false);
-
-        if (activeBox != null)
-        {
-            activeBox.ContinueToLast();
-            activeBox = null;
-        }
-    }
-
-    // =========================
     // ESC KEY LOGIC
     // =========================
     void HandleEsc()
@@ -102,12 +57,14 @@ public class GameManager : MonoBehaviour
         if (!Input.GetKeyDown(KeyCode.Escape)) return;
         if (isGameOver) return;
 
+        // If settings is open, ESC goes back to pause menu
         if (settingsPanel != null && settingsPanel.activeSelf)
         {
             CloseSettings();
             return;
         }
 
+        // Otherwise toggle pause menu
         if (pausePanel != null && pausePanel.activeSelf)
             Resume();
         else
@@ -139,9 +96,6 @@ public class GameManager : MonoBehaviour
         if (pausePanel != null) pausePanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
-
-        // NEW: hide hold UI if game over
-        if (holdPanel != null) holdPanel.SetActive(false);
     }
 
     // =========================
@@ -168,6 +122,8 @@ public class GameManager : MonoBehaviour
     // =========================
     public void OpenSettings()
     {
+        // Keep pausePanel ON if you want it behind settings,
+        // or turn it OFF if you want settings alone. Here: settings alone.
         if (pausePanel != null) pausePanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(true);
     }
@@ -187,6 +143,7 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(exitSceneName);
     }
 
+    // Optional: restart current scene (button on GameOver panel)
     public void RestartScene()
     {
         Time.timeScale = 1f;
