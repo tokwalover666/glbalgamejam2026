@@ -18,10 +18,12 @@ public class AnimationManager : MonoBehaviour
         if (kissZone.isPressingZone == true)
         {
             girlAnim.Play("GirlRotate");
+            boyAnim.Play("Kiss Boy");
         }
         else
         {
             girlAnim.Play("GirlStanding");
+            boyAnim.Play("Idle_001");
         }
 
     }
