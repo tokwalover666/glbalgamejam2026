@@ -1,42 +1,60 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
 public class KissZone : MonoBehaviour
 {
-    public float holdTimeThreshold = 0.5f;
+    [SerializeField] Slider holdSlider;
+    [SerializeField] GameObject heartPrefab;
+    [SerializeField] Transform heartSpawnParent;
+    [SerializeField] GameObject kissWinScreen;
 
-    private bool isPressing;
-    private bool hasTriggered;
-    private float totalDownTime;
+    private float holdTimer;
+    private int score;
+    private bool isPressingZone;
+
+    private const float maxHoldTime = 2f;
+    private const int maxScore = 10;
+
+    void Start()
+    {
+        kissWinScreen.SetActive(false);
+        holdSlider.value = 0f;
+    }
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (score >= maxScore) 
         {
-            if (!IsPointerOverZone()) return;
-
-            totalDownTime = 0f;
-            isPressing = true;
-            hasTriggered = false;
+            kissWinScreen.SetActive(true);
         }
 
-        if (isPressing && Input.GetMouseButton(0))
+        if (Input.GetMouseButtonDown(0) && IsPointerOverZone())
         {
-            totalDownTime += Time.deltaTime;
-
-            if (!hasTriggered && totalDownTime >= holdTimeThreshold)
-            {
-                hasTriggered = true;
-            }
+            isPressingZone = true;
         }
 
         if (Input.GetMouseButtonUp(0))
         {
-            if (!isPressing) return;
+            isPressingZone = false;
+        }
 
-            Debug.Log(totalDownTime);
-            isPressing = false;
+        if (isPressingZone && Input.GetMouseButton(0))
+        {
+            holdTimer += Time.deltaTime;
+            holdSlider.value = holdTimer / maxHoldTime;
+
+            if (holdTimer >= maxHoldTime)
+            {
+                score++;
+
+                GameObject heart = Instantiate(heartPrefab, heartSpawnParent);
+                RectTransform rt = heart.GetComponent<RectTransform>();
+                rt.anchoredPosition = new Vector2((score - 1) * 150f, 0f);
+
+                holdTimer = 0f;
+            }
         }
     }
 
