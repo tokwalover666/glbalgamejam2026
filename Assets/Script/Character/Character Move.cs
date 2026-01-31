@@ -14,7 +14,12 @@ public class CharacterMove : MonoBehaviour
     public Vector3 rotateToEuler = new Vector3(0, 90, 0);
     public float rotationSpeed = 180f;
 
+<<<<<<< Updated upstream
     public bool finished { get; private set; } = false; // added
+=======
+    //  THIS is what other characters will check
+    public bool finished { get; private set; } = false;
+>>>>>>> Stashed changes
 
     enum State
     {
@@ -52,7 +57,11 @@ public class CharacterMove : MonoBehaviour
                 if (Arrived(lastWaypoint.position))
                 {
                     state = State.Done;
+<<<<<<< Updated upstream
                     finished = true; // signal done
+=======
+                    finished = true; //  SIGNAL COMPLETE
+>>>>>>> Stashed changes
                 }
                 break;
         }
