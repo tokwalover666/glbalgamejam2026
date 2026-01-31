@@ -1,4 +1,5 @@
-using UnityEngine;
+﻿using UnityEngine;
+using System;
 
 public class BoxMove : MonoBehaviour
 {
@@ -22,7 +23,9 @@ public class BoxMove : MonoBehaviour
 
     public BoxState state = BoxState.MoveToCheckpoint;
 
-    // Called by spawner or other scripts after Instantiate()
+    // ✅ NEW: spawner can subscribe to this
+    public event Action<BoxMove> OnReachedFinal;
+
     public void Init(Transform checkpointTarget, Transform finalTarget, TopViewPanelUI uiRef)
     {
         checkpoint = checkpointTarget;
@@ -44,7 +47,7 @@ public class BoxMove : MonoBehaviour
                 if (Arrived(checkpoint.position))
                 {
                     state = BoxState.Wait;
-                    ui?.ShowBoth(this);
+                    ui?.ShowBoth(this); // make sure your UI version supports ShowBoth(BoxMove)
                 }
                 break;
 
@@ -57,6 +60,9 @@ public class BoxMove : MonoBehaviour
 
                 if (Arrived(finalPoint.position))
                 {
+                    // ✅ Notify spawner BEFORE destroy
+                    OnReachedFinal?.Invoke(this);
+
                     Destroy(gameObject);
                 }
                 break;
@@ -77,30 +83,12 @@ public class BoxMove : MonoBehaviour
         return Vector3.Distance(transform.position, target) <= arriveDistance;
     }
 
-    // Call from UI button
     public void GoToFinal()
     {
-        Debug.Log($"[BOX] GoToFinal() called on {name} (id={GetInstanceID()}) while state={state}");
-
         if (state == BoxState.Wait)
         {
             state = BoxState.MoveToFinal;
             ui?.HideBoth();
-            Debug.Log($"[BOX] State changed -> MoveToFinal for {name}");
-        }
-        else
-        {
-            Debug.LogWarning($"[BOX] Ignored GoToFinal() because state was {state} (needs Wait).");
-        }
-    }
-
-
-    //  Optional: call this if you want to reopen the panel while waiting
-    public void ReOpenPanelIfWaiting()
-    {
-        if (state == BoxState.Wait)
-        {
-            ui?.ShowBoth(this);
         }
     }
 }

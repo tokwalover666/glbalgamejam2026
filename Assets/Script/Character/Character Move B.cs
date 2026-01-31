@@ -3,51 +3,77 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class CharacterMoveB : MonoBehaviour
 {
-    [Header("Dependency")]
+    [Header("Starts after Character A finishes")]
     public CharacterMove characterA;
 
     [Header("Waypoints")]
-    public Transform waitWaypoint;
+    public Transform firstWaypoint;
     public Transform lastWaypoint;
 
     [Header("Movement")]
     public float moveSpeed = 3f;
     public float arriveDistance = 0.1f;
 
-    [Header("Rotations")]
+    [Header("Rotation at First Waypoint")]
     public Vector3 firstRotateEuler = new Vector3(0, 90, 0);
-    public Vector3 secondRotateEuler = new Vector3(0, 0, 0);
+
+    [Header("Rotation at Final Waypoint")]
+    public Vector3 finalRotateEuler = new Vector3(0, 180, 0);
+
     public float rotationSpeed = 180f;
-    public float waitAfterFirstRotate = 2f;
 
-    private Animator animator;
-    public bool isMoving { get; private set; }
+    [Header("Wait Times")]
+    public float waitAfterFirstRotate = 5f;
+    public float waitAfterRotateBack = 5f;
+    public float waitAfterFinalRotate = 0f;
 
-    Quaternion rotA;
-    Quaternion rotB;
-    float timer;
+    [Header("Animation")]
+    public Animator animator;
+    public string isMovingBool = "IsMoving"; // Bool parameter in Animator
 
-    enum State
+    [Header("Debug")]
+    public bool debugLogs = false;
+
+    public bool finished { get; private set; }
+
+    private Quaternion originalRotation;
+    private Quaternion firstTargetRotation;
+    private Quaternion finalTargetRotation;
+
+    private float timer;
+    private bool lastIsMoving = false;
+
+    private enum State
     {
         WaitingForA,
-        MoveToWait,
-        RotateFirst,
-        Wait,
-        RotateSecond,
+        MoveToFirst,
+        RotateAtFirst,
+        WaitAfterFirstRotate,
+        RotateBack,
+        WaitAfterRotateBack,
         MoveToLast,
+        RotateAtFinal,
+        WaitAfterFinalRotate,
         Done
     }
 
-    State state = State.WaitingForA;
+    private State state = State.WaitingForA;
+
+    void Awake()
+    {
+        if (animator == null)
+            animator = GetComponent<Animator>();
+    }
 
     void Start()
     {
-        animator = GetComponent<Animator>(); // important
-        rotA = Quaternion.Euler(firstRotateEuler);
-        rotB = Quaternion.Euler(secondRotateEuler);
+        finished = false;
 
-        // optional: make sure it starts idle
-        animator.SetBool("isMoving", false);
+        originalRotation = transform.rotation;
+        firstTargetRotation = Quaternion.Euler(firstRotateEuler);
+        finalTargetRotation = Quaternion.Euler(finalRotateEuler);
+
+        SetIsMoving(false);
     }
 
     void Update()
@@ -55,57 +81,99 @@ public class CharacterMoveB : MonoBehaviour
         switch (state)
         {
             case State.WaitingForA:
-                isMoving = false;
+                SetIsMoving(false);
                 if (characterA != null && characterA.finished)
-                    state = State.MoveToWait;
+                    state = State.MoveToFirst;
                 break;
 
-            case State.MoveToWait:
-                isMoving = true;
-                MoveTo(waitWaypoint.position);
-                if (Arrived(waitWaypoint.position))
-                    state = State.RotateFirst;
+            case State.MoveToFirst:
+                SetIsMoving(true);
+                if (firstWaypoint == null) return;
+
+                MoveTo(firstWaypoint.position);
+
+                if (Arrived(firstWaypoint.position))
+                    state = State.RotateAtFirst;
                 break;
 
-            case State.RotateFirst:
-                isMoving = false;
-                Rotate(rotA);
-                if (RotationFinished(rotA))
+            case State.RotateAtFirst:
+                SetIsMoving(false);
+                RotateTowards(firstTargetRotation);
+
+                if (RotationFinished(firstTargetRotation))
                 {
                     timer = 0f;
-                    state = State.Wait;
+                    state = State.WaitAfterFirstRotate;
                 }
                 break;
 
-            case State.Wait:
-                isMoving = false;
+            case State.WaitAfterFirstRotate:
+                SetIsMoving(false);
                 timer += Time.deltaTime;
                 if (timer >= waitAfterFirstRotate)
-                    state = State.RotateSecond;
+                    state = State.RotateBack;
                 break;
 
-            case State.RotateSecond:
-                isMoving = false;
-                Rotate(rotB);
-                if (RotationFinished(rotB))
+            case State.RotateBack:
+                SetIsMoving(false);
+                RotateTowards(originalRotation);
+
+                if (RotationFinished(originalRotation))
+                {
+                    timer = 0f;
+                    state = State.WaitAfterRotateBack;
+                }
+                break;
+
+            case State.WaitAfterRotateBack:
+                SetIsMoving(false);
+                timer += Time.deltaTime;
+                if (timer >= waitAfterRotateBack)
                     state = State.MoveToLast;
                 break;
 
             case State.MoveToLast:
-                isMoving = true;
+                SetIsMoving(true);
+                if (lastWaypoint == null) return;
+
                 MoveTo(lastWaypoint.position);
+
                 if (Arrived(lastWaypoint.position))
+                    state = State.RotateAtFinal;
+                break;
+
+            case State.RotateAtFinal:
+                SetIsMoving(false);
+                RotateTowards(finalTargetRotation);
+
+                if (RotationFinished(finalTargetRotation))
+                {
+                    timer = 0f;
+                    state = State.WaitAfterFinalRotate;
+                }
+                break;
+
+            case State.WaitAfterFinalRotate:
+                SetIsMoving(false);
+                timer += Time.deltaTime;
+                if (timer >= waitAfterFinalRotate)
+                {
+                    finished = true;
                     state = State.Done;
+                    SetIsMoving(false);
+                    enabled = false; // optional
+                }
                 break;
 
             case State.Done:
-                isMoving = false;
-                enabled = false;
+                SetIsMoving(false);
                 break;
         }
-
-        animator.SetBool("isMoving", isMoving);
     }
+
+    // =====================
+    // Helpers
+    // =====================
 
     void MoveTo(Vector3 target)
     {
@@ -116,22 +184,36 @@ public class CharacterMoveB : MonoBehaviour
         );
     }
 
-    void Rotate(Quaternion target)
-    {
-        transform.rotation = Quaternion.RotateTowards(
-            transform.rotation,
-            target,
-            rotationSpeed * Time.deltaTime
-        );
-    }
-
     bool Arrived(Vector3 target)
     {
         return Vector3.Distance(transform.position, target) <= arriveDistance;
     }
 
-    bool RotationFinished(Quaternion target)
+    void RotateTowards(Quaternion targetRot)
     {
-        return Quaternion.Angle(transform.rotation, target) < 1f;
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            targetRot,
+            rotationSpeed * Time.deltaTime
+        );
+    }
+
+    bool RotationFinished(Quaternion targetRot)
+    {
+        return Quaternion.Angle(transform.rotation, targetRot) < 1f;
+    }
+
+    void SetIsMoving(bool moving)
+    {
+        if (animator == null) return;
+
+        // Only set when it actually changes (prevents spamming transitions)
+        if (moving == lastIsMoving) return;
+
+        lastIsMoving = moving;
+        animator.SetBool(isMovingBool, moving);
+
+        if (debugLogs)
+            Debug.Log($"[CharacterMoveB] {name} IsMoving -> {moving} (state={state})");
     }
 }

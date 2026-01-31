@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 
@@ -9,15 +9,23 @@ public class GameManager : MonoBehaviour
     public TMP_Text timerText;
 
     [Header("Panels")]
-    public GameObject pausePanel;     // contains Resume / Settings / Exit buttons
-    public GameObject settingsPanel;  // contains Settings UI + Back button
-    public GameObject gameOverPanel;  // shows when timer hits 0
+    public GameObject pausePanel;
+    public GameObject settingsPanel;
+    public GameObject gameOverPanel;
 
     [Header("Exit")]
-    public string exitSceneName = "MainMenu"; // scene to load when Exit is clicked
+    public string exitSceneName = "MainMenu";
+
+    [Header("Start Conditions")]
+    public CharacterMoveB boss;              // drag the boss object (CharacterMoveB)
+    public BoxSpawner boxSpawner;            // drag your spawner
+    public HoldToProgressTimer holdTimer;    // drag your hold-to-progress timer (if you have it)
 
     float currentTime;
     bool isGameOver = false;
+
+    // NEW: gate
+    bool gameStarted = false;
 
     void Start()
     {
@@ -28,6 +36,10 @@ public class GameManager : MonoBehaviour
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
 
         Time.timeScale = 1f;
+
+        // optional: disable hold timer until boss finishes
+        if (holdTimer != null) holdTimer.enabled = false;
+
         UpdateTimerText();
     }
 
@@ -37,7 +49,26 @@ public class GameManager : MonoBehaviour
 
         if (isGameOver) return;
 
-        // Countdown (will naturally pause when Time.timeScale = 0)
+        // ✅ Wait for boss before starting systems + countdown
+        if (!gameStarted)
+        {
+            if (boss != null && boss.finished)
+            {
+                gameStarted = true;
+
+                if (boxSpawner != null)
+                    boxSpawner.EnableSpawning();
+
+                if (holdTimer != null)
+                    holdTimer.enabled = true;
+
+                Debug.Log("[GM] Boss finished. Spawner + hold timer + countdown started.");
+            }
+
+            return; // do NOT tick countdown yet
+        }
+
+        // Countdown (pauses naturally when Time.timeScale = 0)
         currentTime -= Time.deltaTime;
 
         if (currentTime <= 0f)
@@ -57,14 +88,12 @@ public class GameManager : MonoBehaviour
         if (!Input.GetKeyDown(KeyCode.Escape)) return;
         if (isGameOver) return;
 
-        // If settings is open, ESC goes back to pause menu
         if (settingsPanel != null && settingsPanel.activeSelf)
         {
             CloseSettings();
             return;
         }
 
-        // Otherwise toggle pause menu
         if (pausePanel != null && pausePanel.activeSelf)
             Resume();
         else
@@ -122,8 +151,6 @@ public class GameManager : MonoBehaviour
     // =========================
     public void OpenSettings()
     {
-        // Keep pausePanel ON if you want it behind settings,
-        // or turn it OFF if you want settings alone. Here: settings alone.
         if (pausePanel != null) pausePanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(true);
     }
@@ -143,7 +170,6 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(exitSceneName);
     }
 
-    // Optional: restart current scene (button on GameOver panel)
     public void RestartScene()
     {
         Time.timeScale = 1f;

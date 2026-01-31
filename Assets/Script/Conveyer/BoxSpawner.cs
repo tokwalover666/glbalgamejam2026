@@ -16,30 +16,51 @@ public class BoxSpawner : MonoBehaviour
     [Header("UI")]
     public TopViewPanelUI ui;
 
-    [Header("Player Trigger")]
-    public CharacterMove player;   // assign the player here
+    [Header("Limit")]
+    public int maxBoxesToSpawn = 10;  // ✅ change this in inspector
+
+    [Header("Debug")]
+    public bool debugLogs = true;
 
     private BoxMove currentBox;
-    private bool hasSpawned = false;
+    private bool canSpawn = false;
 
-    void Update()
+    private int spawnedCount = 0;
+    private int completedCount = 0;
+
+    // Call this from GameManager when boss finishes
+    public void EnableSpawning()
     {
-        if (hasSpawned) return;
-        if (player == null) return;
+        canSpawn = true;
 
-        // 🔑 Spawn ONLY when player reaches final waypoint
-        if (player.finished)
-        {
-            Spawn();
-            hasSpawned = true;
-        }
+        // Spawn the first box immediately
+        TrySpawnNext();
     }
 
-    public void Spawn()
+    void TrySpawnNext()
+    {
+        if (!canSpawn) return;
+
+        if (spawnedCount >= maxBoxesToSpawn)
+        {
+            if (debugLogs) Debug.Log("[BoxSpawner] Reached maxBoxesToSpawn. No more spawns.");
+            return;
+        }
+
+        SpawnInternal();
+    }
+
+    void SpawnInternal()
     {
         if (boxPrefab == null || spawnPoint == null)
         {
-            Debug.LogWarning("BoxSpawner missing boxPrefab or spawnPoint.");
+            Debug.LogWarning("[BoxSpawner] Missing boxPrefab or spawnPoint.");
+            return;
+        }
+
+        if (checkpointWaypoint == null || finalWaypoint == null)
+        {
+            Debug.LogWarning("[BoxSpawner] Missing waypoint references.");
             return;
         }
 
@@ -52,23 +73,42 @@ public class BoxSpawner : MonoBehaviour
         currentBox = obj.GetComponent<BoxMove>();
         if (currentBox == null)
         {
-            Debug.LogWarning("Spawned prefab has no BoxMove component.");
-            return;
-        }
-
-        if (checkpointWaypoint == null || finalWaypoint == null)
-        {
-            Debug.LogWarning("BoxSpawner missing waypoint references.");
+            Debug.LogWarning("[BoxSpawner] Spawned prefab has no BoxMove component.");
+            Destroy(obj);
             return;
         }
 
         currentBox.Init(checkpointWaypoint, finalWaypoint, ui);
 
-        Debug.Log("[SPAWNER] Box spawned after player arrival.");
+        // ✅ listen for completion
+        currentBox.OnReachedFinal += HandleBoxReachedFinal;
+
+        spawnedCount++;
+
+        if (debugLogs)
+            Debug.Log($"[BoxSpawner] Spawned box {spawnedCount}/{maxBoxesToSpawn}: {currentBox.name}");
     }
 
-    public BoxMove GetCurrentBox()
+    void HandleBoxReachedFinal(BoxMove box)
     {
-        return currentBox;
+        // Unsubscribe (safe cleanup)
+        if (box != null)
+            box.OnReachedFinal -= HandleBoxReachedFinal;
+
+        completedCount++;
+
+        if (debugLogs)
+            Debug.Log($"[BoxSpawner] Box completed! completed={completedCount}, spawned={spawnedCount}");
+
+        // Clear current ref if it’s the same box
+        if (currentBox == box)
+            currentBox = null;
+
+        // Spawn next one
+        TrySpawnNext();
     }
+
+    // Optional getters if you want UI display
+    public int GetSpawnedCount() => spawnedCount;
+    public int GetCompletedCount() => completedCount;
 }
