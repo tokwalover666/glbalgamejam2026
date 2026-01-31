@@ -111,4 +111,9 @@ public class BoxSpawner : MonoBehaviour
     // Optional getters if you want UI display
     public int GetSpawnedCount() => spawnedCount;
     public int GetCompletedCount() => completedCount;
+
+    public void StopSpawning()
+    {
+        canSpawn = false;
+    }
 }

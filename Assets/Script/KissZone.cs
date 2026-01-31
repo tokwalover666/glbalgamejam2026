@@ -12,7 +12,9 @@ public class KissZone : MonoBehaviour
 
     private float holdTimer;
     private int score;
-    private bool isPressingZone;
+
+    // Change the access modifier of isPressingZone from private to public
+    public bool isPressingZone;
 
     private const float maxHoldTime = 2f;
     private const int maxScore = 10;

@@ -16,6 +16,8 @@ public class HoldToProgressTimer : MonoBehaviour
     private bool isHolding = false;
     private bool completed = false;
 
+    public CharacterMove characterA;
+
     void Update()
     {
         if (completed) return;
@@ -61,6 +63,8 @@ public class HoldToProgressTimer : MonoBehaviour
         isHolding = true;
 
         if (debugLogs) Debug.Log("[HOLD] START");
+
+        characterA?.SetWorking(true);
     }
 
     public void OnHoldEnd()
@@ -71,6 +75,8 @@ public class HoldToProgressTimer : MonoBehaviour
 
         if (debugLogs)
             Debug.Log($"[HOLD] STOP at {holdTimer:F2}/{holdDuration:F2} ({GetProgress01() * 100f:F0}%)");
+
+        characterA?.SetWorking(false);
     }
 
     public void ResetHold()

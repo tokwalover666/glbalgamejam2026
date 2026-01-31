@@ -12,20 +12,20 @@ public class GameManager : MonoBehaviour
     public GameObject pausePanel;
     public GameObject settingsPanel;
     public GameObject gameOverPanel;
+    public GameObject losePanel; // ✅ NEW
 
     [Header("Exit")]
     public string exitSceneName = "MainMenu";
 
-    [Header("Start Conditions")]
-    public CharacterMoveB boss;              // drag the boss object (CharacterMoveB)
-    public BoxSpawner boxSpawner;            // drag your spawner
-    public HoldToProgressTimer holdTimer;    // drag your hold-to-progress timer (if you have it)
+    [Header("Systems")]
+    public BoxSpawner boxSpawner;
+    public HoldToProgressTimer holdTimer;
 
     float currentTime;
     bool isGameOver = false;
 
-    // NEW: gate
-    bool gameStarted = false;
+    // ✅ NEW: gameplay systems start later (after Character B first route)
+    bool systemsStarted = false;
 
     void Start()
     {
@@ -34,10 +34,11 @@ public class GameManager : MonoBehaviour
         if (pausePanel != null) pausePanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (losePanel != null) losePanel.SetActive(false);
 
         Time.timeScale = 1f;
 
-        // optional: disable hold timer until boss finishes
+        // start disabled until Character B tells us to start
         if (holdTimer != null) holdTimer.enabled = false;
 
         UpdateTimerText();
@@ -49,26 +50,9 @@ public class GameManager : MonoBehaviour
 
         if (isGameOver) return;
 
-        // ✅ Wait for boss before starting systems + countdown
-        if (!gameStarted)
-        {
-            if (boss != null && boss.finished)
-            {
-                gameStarted = true;
+        // ✅ Don’t countdown until systems have started
+        if (!systemsStarted) return;
 
-                if (boxSpawner != null)
-                    boxSpawner.EnableSpawning();
-
-                if (holdTimer != null)
-                    holdTimer.enabled = true;
-
-                Debug.Log("[GM] Boss finished. Spawner + hold timer + countdown started.");
-            }
-
-            return; // do NOT tick countdown yet
-        }
-
-        // Countdown (pauses naturally when Time.timeScale = 0)
         currentTime -= Time.deltaTime;
 
         if (currentTime <= 0f)
@@ -78,6 +62,38 @@ public class GameManager : MonoBehaviour
         }
 
         UpdateTimerText();
+    }
+
+    // ✅ Called by CharacterMoveB after its FIRST route ends
+    public void StartGameplaySystems()
+    {
+        if (systemsStarted) return;
+        systemsStarted = true;
+
+        if (boxSpawner != null) boxSpawner.EnableSpawning();
+        if (holdTimer != null) holdTimer.enabled = true;
+
+        Debug.Log("[GM] Systems started: spawner + hold timer + countdown.");
+    }
+
+    // ✅ Called by CharacterMoveB when spotted happens
+    public void TriggerLose()
+    {
+        if (isGameOver) return;
+
+        isGameOver = true;
+
+        if (boxSpawner != null) boxSpawner.StopSpawning();
+        if (holdTimer != null) holdTimer.enabled = false;
+
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (losePanel != null) losePanel.SetActive(true);
+
+        Time.timeScale = 0f;
+
+        Debug.Log("[GM] LOSE triggered. Game stopped.");
     }
 
     // =========================
@@ -115,7 +131,7 @@ public class GameManager : MonoBehaviour
     }
 
     // =========================
-    // GAME OVER
+    // GAME OVER (timeout)
     // =========================
     void TriggerGameOver()
     {
@@ -124,6 +140,7 @@ public class GameManager : MonoBehaviour
 
         if (pausePanel != null) pausePanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (losePanel != null) losePanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
     }
 
@@ -162,7 +179,7 @@ public class GameManager : MonoBehaviour
     }
 
     // =========================
-    // EXIT (button)
+    // EXIT / RESTART
     // =========================
     public void ExitToScene()
     {

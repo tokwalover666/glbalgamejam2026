@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+[RequireComponent(typeof(Animator))]
 public class CharacterMove : MonoBehaviour
 {
     [Header("Waypoints")]
@@ -11,17 +12,19 @@ public class CharacterMove : MonoBehaviour
     public float arriveDistance = 0.1f;
 
     [Header("Rotation at First Waypoint")]
-    public Vector3 rotateToEuler = new Vector3(0, 90, 0); // set any rotation you want
+    public Vector3 rotateToEuler = new Vector3(0, 90, 0);
     public float rotationSpeed = 180f;
 
     [Header("Animation")]
     public Animator animator;
 
-    // Recommended Animator setup:
-    // Bool parameter: "IsWalking"
+    // Animator parameters
     public string isWalkingBool = "IsWalking";
+    public string isWorkingBool = "IsWorking";
 
     public bool finished { get; private set; }
+
+    private bool isWorking = false;
 
     private enum State
     {
@@ -33,10 +36,20 @@ public class CharacterMove : MonoBehaviour
 
     private State state = State.MoveToFirst;
 
+    void Awake()
+    {
+        if (animator == null)
+            animator = GetComponent<Animator>();
+
+        // Prevent animation from overriding transform motion
+        animator.applyRootMotion = false;
+    }
+
     void Start()
     {
         finished = false;
-        SetWalking(true); // start in walk
+        SetWalking(true);
+        SetWorking(false);
     }
 
     void Update()
@@ -47,42 +60,74 @@ public class CharacterMove : MonoBehaviour
         switch (state)
         {
             case State.MoveToFirst:
-                SetWalking(true);
-                MoveTo(firstWaypoint.position);
-
-                if (Arrived(firstWaypoint.position))
+                if (!isWorking)
                 {
-                    state = State.RotateAtFirst;
+                    SetWalking(true);
+                    MoveTo(firstWaypoint.position);
+
+                    if (Arrived(firstWaypoint.position))
+                        state = State.RotateAtFirst;
                 }
                 break;
 
             case State.RotateAtFirst:
-                // rotating in place -> idle
                 SetWalking(false);
                 RotateToTarget();
 
                 if (RotationFinished())
-                {
                     state = State.MoveToLast;
-                }
                 break;
 
             case State.MoveToLast:
-                SetWalking(true);
-                MoveTo(lastWaypoint.position);
-
-                if (Arrived(lastWaypoint.position))
+                if (!isWorking)
                 {
-                    finished = true;
-                    state = State.Done;
-                    SetWalking(false); // final idle
+                    SetWalking(true);
+                    MoveTo(lastWaypoint.position);
+
+                    if (Arrived(lastWaypoint.position))
+                    {
+                        finished = true;
+                        state = State.Done;
+                        SetWalking(false);
+                        SetWorking(false);
+                    }
                 }
                 break;
 
             case State.Done:
                 SetWalking(false);
+                SetWorking(false);
                 break;
         }
+    }
+
+    // =====================
+    // Public API (IMPORTANT)
+    // =====================
+
+    /// <summary>
+    /// Called by HoldToProgressTimer
+    /// </summary>
+    public void SetWorking(bool working)
+    {
+        if (isWorking == working) return;
+
+        isWorking = working;
+
+        if (animator != null)
+            animator.SetBool(isWorkingBool, working);
+
+        // Stop walking animation while working
+        if (working)
+            SetWalking(false);
+    }
+
+    /// <summary>
+    /// Used by CharacterMoveB to check if player is safe
+    /// </summary>
+    public bool IsWorking()
+    {
+        return isWorking;
     }
 
     // =====================

@@ -218,6 +218,7 @@ RectTransform:
   - {fileID: 108731629}
   - {fileID: 1129587212}
   - {fileID: 1101977901}
+  - {fileID: 783020179}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1040,6 +1041,7 @@ MonoBehaviour:
   heartPrefab: {fileID: 8906700136220331055, guid: 95a26b7acb86a8d41ac5f3e7804831f1, type: 3}
   heartSpawnParent: {fileID: 1278606921}
   kissWinScreen: {fileID: 506144240}
+  isPressingZone: 0
 --- !u!4 &514771599
 Transform:
   m_ObjectHideFlags: 0
@@ -1458,13 +1460,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2739ab46ecb5c814aa99e8b3a95e256a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  startTime: 30
+  startTime: 300
   timerText: {fileID: 108731630}
   pausePanel: {fileID: 0}
   settingsPanel: {fileID: 0}
   gameOverPanel: {fileID: 0}
+  losePanel: {fileID: 783020178}
   exitSceneName: MainMenu
-  boss: {fileID: 5733509785384496976}
   boxSpawner: {fileID: 2069650953}
   holdTimer: {fileID: 767248024}
 --- !u!114 &767248024
@@ -1483,6 +1485,7 @@ MonoBehaviour:
   boxMove: {fileID: 1174472515423788239, guid: 68f80b2ec2b6a294fb70c04bf8d93e94, type: 3}
   ui: {fileID: 91430578}
   debugLogs: 1
+  characterA: {fileID: 5866666020275349996}
 --- !u!4 &767248025
 Transform:
   m_ObjectHideFlags: 0
@@ -1518,6 +1521,81 @@ MonoBehaviour:
   ui: {fileID: 91430578}
   maxBoxesToSpawn: 10
   debugLogs: 1
+--- !u!1 &783020178
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 783020179}
+  - component: {fileID: 783020181}
+  - component: {fileID: 783020180}
+  m_Layer: 5
+  m_Name: lose
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &783020179
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 783020178}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 91430577}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &783020180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 783020178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &783020181
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 783020178}
+  m_CullTransparentMesh: 1
 --- !u!1 &824014423
 GameObject:
   m_ObjectHideFlags: 0
@@ -3220,7 +3298,7 @@ MonoBehaviour:
   countText: {fileID: 1129587213}
   winPanel: {fileID: 1101977900}
   boxTag: Package
-  requireTag: 1
+  requireTag: 0
   debugLogs: 1
 --- !u!1 &1485199873
 GameObject:
@@ -5491,7 +5569,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5733509785384496973}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0.9060605, z: 0, w: 0.4231481}
   m_LocalPosition: {x: 0.1298809, y: -0.07630098, z: 2.976923}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
@@ -5499,7 +5577,7 @@ Transform:
   - {fileID: 2822586303080398038}
   - {fileID: 6543358672665957181}
   m_Father: {fileID: 2103646219}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 129.933, z: 0}
 --- !u!4 &5007362866896633478
 Transform:
   m_ObjectHideFlags: 0
@@ -5743,16 +5821,21 @@ MonoBehaviour:
   characterA: {fileID: 5866666020275349996}
   firstWaypoint: {fileID: 1906237765}
   lastWaypoint: {fileID: 169696978}
-  moveSpeed: 3
+  moveSpeed: 5
   arriveDistance: 0.1
-  firstRotateEuler: {x: 0, y: -126, z: 0}
-  finalRotateEuler: {x: 0, y: 420, z: 0}
+  firstRotateEuler: {x: 0, y: 145.433, z: 0}
+  waitBetweenRotations: 2
+  secondRotateEuler: {x: 0, y: -32.433, z: 0}
   rotationSpeed: 70
-  waitAfterFirstRotate: 5
-  waitAfterRotateBack: 2
-  waitAfterFinalRotate: 2
+  minExtraLoops: 1
+  maxExtraLoops: 15
+  afterFirstRunDelay: 5
+  minWaitAtLast: 4
+  maxWaitAtLast: 5
   animator: {fileID: 5733509785384496975}
   isMovingBool: isMoving
+  spottedTrigger: Spotted
+  gameManager: {fileID: 767248023}
   debugLogs: 0
 --- !u!1 &5845793936890362227
 GameObject:
@@ -5806,12 +5889,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterMove
   firstWaypoint: {fileID: 2081529082}
   lastWaypoint: {fileID: 479896174}
-  moveSpeed: 3
+  moveSpeed: 5
   arriveDistance: 0.1
   rotateToEuler: {x: 0, y: 180, z: 0}
   rotationSpeed: 180
   animator: {fileID: 5866666020275349995}
   isWalkingBool: IsWalking
+  isWorkingBool: IsWorking
 --- !u!54 &5866666020275349997
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -6499,5 +6583,5 @@ SceneRoots:
   - {fileID: 2103646219}
   - {fileID: 91430577}
   - {fileID: 583710377}
-  - {fileID: 767248025}
   - {fileID: 1485199874}
+  - {fileID: 767248025}
