@@ -1,14 +1,18 @@
-using UnityEngine;
+﻿using UnityEngine;
+using System;
 
 public class BoxMove : MonoBehaviour
 {
+    [Header("Waypoints")]
     public Transform checkpoint;
     public Transform finalPoint;
+
+    [Header("Movement")]
     public float speed = 3f;
     public float arriveDistance = 0.05f;
 
     [Header("UI Panels")]
-    public TopViewPanelUI ui; // drag the object with TwoPanelUI here
+    public TopViewPanelUI ui;
 
     public enum BoxState
     {
@@ -19,8 +23,22 @@ public class BoxMove : MonoBehaviour
 
     public BoxState state = BoxState.MoveToCheckpoint;
 
+    // ✅ NEW: spawner can subscribe to this
+    public event Action<BoxMove> OnReachedFinal;
+
+    public void Init(Transform checkpointTarget, Transform finalTarget, TopViewPanelUI uiRef)
+    {
+        checkpoint = checkpointTarget;
+        finalPoint = finalTarget;
+        ui = uiRef;
+
+        state = BoxState.MoveToCheckpoint;
+    }
+
     void Update()
     {
+        if (checkpoint == null || finalPoint == null) return;
+
         switch (state)
         {
             case BoxState.MoveToCheckpoint:
@@ -29,12 +47,12 @@ public class BoxMove : MonoBehaviour
                 if (Arrived(checkpoint.position))
                 {
                     state = BoxState.Wait;
-                    ui?.ShowBoth(); // show BOTH panels when waiting
+                    ui?.ShowBoth(this); // make sure your UI version supports ShowBoth(BoxMove)
                 }
                 break;
 
             case BoxState.Wait:
-                // waiting for UI interaction later
+                // waits until button calls GoToFinal()
                 break;
 
             case BoxState.MoveToFinal:
@@ -42,6 +60,9 @@ public class BoxMove : MonoBehaviour
 
                 if (Arrived(finalPoint.position))
                 {
+                    // ✅ Notify spawner BEFORE destroy
+                    OnReachedFinal?.Invoke(this);
+
                     Destroy(gameObject);
                 }
                 break;
@@ -62,13 +83,12 @@ public class BoxMove : MonoBehaviour
         return Vector3.Distance(transform.position, target) <= arriveDistance;
     }
 
-    // Call from UI button
     public void GoToFinal()
     {
         if (state == BoxState.Wait)
         {
             state = BoxState.MoveToFinal;
-            ui?.HideBoth(); // hide both once it continues
+            ui?.HideBoth();
         }
     }
 }

@@ -2,43 +2,23 @@ using UnityEngine;
 
 public class TopViewPanelUI : MonoBehaviour
 {
-    [Header("Panels")]
-    [SerializeField] private GameObject panelA; // ex: Main panel
-    [SerializeField] private GameObject panelB; // ex: Top view panel
+    public GameObject panel;
+    public HoldToProgressTimer holdTimer;
 
-    void Awake()
+    public void ShowBoth(BoxMove box)
     {
-        HideAll();
-    }
+        if (panel != null) panel.SetActive(true);
 
-    public void ShowBoth()
-    {
-        if (panelA != null) panelA.SetActive(true);
-        if (panelB != null) panelB.SetActive(true);
+        if (holdTimer != null)
+        {
+            holdTimer.boxMove = box;
+            holdTimer.ui = this;     // so it can hide the panel on finish
+            holdTimer.ResetHold();
+        }
     }
 
     public void HideBoth()
     {
-        if (panelA != null) panelA.SetActive(false);
-        if (panelB != null) panelB.SetActive(false);
+        if (panel != null) panel.SetActive(false);
     }
-
-    public void ShowAOnly()
-    {
-        if (panelA != null) panelA.SetActive(true);
-        if (panelB != null) panelB.SetActive(false);
-    }
-
-    public void ShowBOnly()
-    {
-        if (panelA != null) panelA.SetActive(false);
-        if (panelB != null) panelB.SetActive(true);
-    }
-
-    public void HideAll()
-    {
-        if (panelA != null) panelA.SetActive(false);
-        if (panelB != null) panelB.SetActive(false);
-    }
-
 }

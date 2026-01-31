@@ -69,7 +69,15 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
+<<<<<<< HEAD:Assets/Prefab/Package.prefab
+<<<<<<< Updated upstream:Assets/Prefab/Package.prefab
+  - {fileID: 2100000, guid: 4a27b3cb132217a4da649db15bb6bdc8, type: 2}
+=======
+  - {fileID: 2100000, guid: f89436d326a0d094fa33b4940076243a, type: 2}
+>>>>>>> Stashed changes:Assets/Prefab/Packages.prefab
+=======
   - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+>>>>>>> parent of 8db5096 (character movement and animation):Assets/Prefab/Packages.prefab
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -126,9 +134,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23a284942edb80344bb1b54468742610, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BoxMove
+<<<<<<< HEAD:Assets/Prefab/Package.prefab
+  checkpoint: {fileID: 0}
+  finalPoint: {fileID: 0}
+<<<<<<< Updated upstream:Assets/Prefab/Package.prefab
+  speed: 3
+  arriveDistance: 0.05
+  ui: {fileID: 0}
+  state: 0
+--- !u!54 &5287975708071976821
+=======
+  speed: 2
+  arriveDistance: 0.05
+  ui: {fileID: 0}
+  state: 0
+--- !u!54 &-7933661203310623455
+>>>>>>> Stashed changes:Assets/Prefab/Packages.prefab
+=======
   speed: 2
   direction: {x: 1, y: 0, z: 0}
 --- !u!54 &-7933661203310623455
+>>>>>>> parent of 8db5096 (character movement and animation):Assets/Prefab/Packages.prefab
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
