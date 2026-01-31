@@ -58,7 +58,7 @@ public class KissZone : MonoBehaviour
         }
     }
 
-    bool IsPointerOverZone()
+    public static bool IsPointerOverZone()
     {
         PointerEventData data = new PointerEventData(EventSystem.current);
         data.position = Input.mousePosition;
