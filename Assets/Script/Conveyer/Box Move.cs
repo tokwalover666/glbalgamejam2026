@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class BoxMove : MonoBehaviour
 {
@@ -7,6 +6,9 @@ public class BoxMove : MonoBehaviour
     public Transform finalPoint;
     public float speed = 3f;
     public float arriveDistance = 0.05f;
+
+    [Header("UI Panels")]
+    public TopViewPanelUI ui; // drag the object with TwoPanelUI here
 
     public enum BoxState
     {
@@ -27,12 +29,12 @@ public class BoxMove : MonoBehaviour
                 if (Arrived(checkpoint.position))
                 {
                     state = BoxState.Wait;
+                    ui?.ShowBoth(); // show BOTH panels when waiting
                 }
                 break;
 
             case BoxState.Wait:
-                // do nothing, external systems (UI, trigger, etc.)
-                // will change the state
+                // waiting for UI interaction later
                 break;
 
             case BoxState.MoveToFinal:
@@ -60,12 +62,13 @@ public class BoxMove : MonoBehaviour
         return Vector3.Distance(transform.position, target) <= arriveDistance;
     }
 
-    // Call this from UI / trigger / other script later
+    // Call from UI button
     public void GoToFinal()
     {
         if (state == BoxState.Wait)
         {
             state = BoxState.MoveToFinal;
+            ui?.HideBoth(); // hide both once it continues
         }
     }
 }
