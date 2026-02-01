@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TopViewPanelUI : MonoBehaviour
 {
@@ -11,9 +11,9 @@ public class TopViewPanelUI : MonoBehaviour
 
         if (holdTimer != null)
         {
-            holdTimer.boxMove = box;
-            holdTimer.ui = this;     // so it can hide the panel on finish
-            holdTimer.ResetHold();
+            // ✅ Tell the hold system which box is currently being worked on
+            holdTimer.ui = this; // so it can hide panel on finish
+            holdTimer.SetActiveBox(box);
         }
     }
 

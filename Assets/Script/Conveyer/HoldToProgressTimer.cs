@@ -6,8 +6,11 @@ public class HoldToProgressTimer : MonoBehaviour
     public float holdDuration = 2.5f;
 
     [Header("References")]
-    public BoxMove boxMove;          // assigned when box reaches checkpoint
-    public TopViewPanelUI ui;        // assign in inspector (same UI that shows/hides)
+    public BoxMove boxMove;          // active box (waiting at checkpoint)
+    public TopViewPanelUI ui;        // assign in inspector
+
+    [Header("Character")]
+    public CharacterMove characterA; // for working animation
 
     [Header("Debug")]
     public bool debugLogs = true;
@@ -15,8 +18,6 @@ public class HoldToProgressTimer : MonoBehaviour
     private float holdTimer = 0f;
     private bool isHolding = false;
     private bool completed = false;
-
-    public CharacterMove characterA;
 
     void Update()
     {
@@ -30,20 +31,27 @@ public class HoldToProgressTimer : MonoBehaviour
         holdTimer += Time.deltaTime;
 
         if (debugLogs)
-            Debug.Log($"[HOLD] {holdTimer:F2}/{holdDuration:F2} ({GetProgress01() * 100f:F0}%)");
+            Debug.Log($"[HOLD] {holdTimer:F2}/{holdDuration:F2} ({GetProgress01() * 100f:F0}%) on {boxMove.name}");
 
         if (holdTimer >= holdDuration)
         {
             completed = true;
             isHolding = false;
 
-            if (debugLogs) Debug.Log("[HOLD] FINISHED -> hide UI + box GoToFinal");
+            if (debugLogs) Debug.Log("[HOLD] FINISHED -> swap prefab + send to final");
 
-            characterA?.SetWorking(false);   // ✅ stop working when done
+            // stop working animation
+            characterA?.SetWorking(false);
+
+            // hide UI
             ui?.HideBoth();
-            boxMove.GoToFinal();
-        }
 
+            // ✅ SWAP PREFAB HERE (this swaps THIS instance, at its current position)
+            boxMove.SwapToCompletedPrefabAndContinue();
+
+            // clear reference (old box will be destroyed)
+            boxMove = null;
+        }
     }
 
     public void OnHoldStart()
@@ -81,13 +89,20 @@ public class HoldToProgressTimer : MonoBehaviour
         characterA?.SetWorking(false);
     }
 
-    public void ResetHold()
+    /// <summary>
+    /// Call this whenever a new box reaches the checkpoint and becomes the active box.
+    /// This resets the hold so you can work on the next box.
+    /// </summary>
+    public void SetActiveBox(BoxMove newBox)
     {
+        boxMove = newBox;
+
         holdTimer = 0f;
         isHolding = false;
         completed = false;
 
-        if (debugLogs) Debug.Log("[HOLD] Reset");
+        if (debugLogs)
+            Debug.Log($"[HOLD] SetActiveBox -> {newBox?.name ?? "NULL"} (reset hold)");
     }
 
     public float GetProgress01()

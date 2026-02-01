@@ -1,6 +1,5 @@
-﻿using System;
-using UnityEngine;
-using UnityEngine.TextCore.Text;
+﻿using UnityEngine;
+using System;
 
 public class BoxMove : MonoBehaviour
 {
@@ -15,7 +14,8 @@ public class BoxMove : MonoBehaviour
     [Header("UI Panels")]
     public TopViewPanelUI ui;
 
-    public CharacterMove character;
+    [Header("Swap Prefab (taped box)")]
+    public GameObject completedBoxPrefab; // assign your taped box prefab here
 
     public enum BoxState
     {
@@ -26,7 +26,6 @@ public class BoxMove : MonoBehaviour
 
     public BoxState state = BoxState.MoveToCheckpoint;
 
-    // ✅ NEW: spawner can subscribe to this
     public event Action<BoxMove> OnReachedFinal;
 
     public void Init(Transform checkpointTarget, Transform finalTarget, TopViewPanelUI uiRef)
@@ -34,7 +33,6 @@ public class BoxMove : MonoBehaviour
         checkpoint = checkpointTarget;
         finalPoint = finalTarget;
         ui = uiRef;
-
         state = BoxState.MoveToCheckpoint;
     }
 
@@ -50,26 +48,20 @@ public class BoxMove : MonoBehaviour
                 if (Arrived(checkpoint.position))
                 {
                     state = BoxState.Wait;
-                    ui?.ShowBoth(this); // make sure your UI version supports ShowBoth(BoxMove)
+                    ui?.ShowBoth(this);
                 }
                 break;
 
             case BoxState.Wait:
-                if (character != null)
-                {
-
-                }
+                // waits until hold completes
                 break;
-
 
             case BoxState.MoveToFinal:
                 Move(finalPoint.position);
 
                 if (Arrived(finalPoint.position))
                 {
-                    // ✅ Notify spawner BEFORE destroy
                     OnReachedFinal?.Invoke(this);
-
                     Destroy(gameObject);
                 }
                 break;
@@ -97,5 +89,43 @@ public class BoxMove : MonoBehaviour
             state = BoxState.MoveToFinal;
             ui?.HideBoth();
         }
+    }
+
+    /// <summary>
+    /// Swap THIS box instance into the completed prefab, at the same position/rotation,
+    /// and continue moving to final.
+    /// </summary>
+    public void SwapToCompletedPrefabAndContinue()
+    {
+        if (completedBoxPrefab == null)
+        {
+            Debug.LogWarning("[BoxMove] completedBoxPrefab is not assigned. Using current box instead.");
+            GoToFinal();
+            return;
+        }
+
+        Vector3 pos = transform.position;
+        Quaternion rot = transform.rotation;
+        Transform parent = transform.parent;
+
+        // Spawn the completed box at the same spot
+        GameObject newBox = Instantiate(completedBoxPrefab, pos, rot, parent);
+
+        // Copy movement targets into the new one
+        BoxMove newMove = newBox.GetComponent<BoxMove>();
+        if (newMove != null)
+        {
+            newMove.Init(checkpoint, finalPoint, ui);
+
+            // Force it to continue to final (skip waiting)
+            newMove.state = BoxState.MoveToFinal;
+            ui?.HideBoth();
+        }
+        else
+        {
+            Debug.LogWarning("[BoxMove] Completed prefab has no BoxMove component.");
+        }
+
+        Destroy(gameObject);
     }
 }

@@ -1,10 +1,12 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
 public class KissZone : MonoBehaviour
 {
+    [SerializeField] ParticleSystem kissParticles;
+
     [SerializeField] Slider holdSlider;
     [SerializeField] GameObject heartPrefab;
     [SerializeField] Transform heartSpawnParent;
@@ -26,7 +28,7 @@ public class KissZone : MonoBehaviour
 
     void Update()
     {
-        if (score >= maxScore) 
+        if (score >= maxScore)
         {
             kissWinScreen.SetActive(true);
         }
@@ -41,8 +43,12 @@ public class KissZone : MonoBehaviour
             isPressingZone = false;
         }
 
+        // ▶ PARTICLE LOGIC
         if (isPressingZone && Input.GetMouseButton(0))
         {
+            if (!kissParticles.isPlaying)
+                kissParticles.Play();
+
             holdTimer += Time.deltaTime;
             holdSlider.value = holdTimer / maxHoldTime;
 
@@ -57,7 +63,13 @@ public class KissZone : MonoBehaviour
                 holdTimer = 0f;
             }
         }
+        else
+        {
+            if (kissParticles.isPlaying)
+                kissParticles.Stop();
+        }
     }
+
 
     public static bool IsPointerOverZone()
     {

@@ -110,6 +110,7 @@ MonoBehaviour:
   speed: 3
   arriveDistance: 0.05
   ui: {fileID: 0}
+  completedBoxPrefab: {fileID: 6938039172391218768, guid: 6bdf7d68cd991fc48b642860d8ad6a52, type: 3}
   state: 0
 --- !u!54 &-4443119575699469236
 Rigidbody:
