@@ -54,20 +54,26 @@ public class CharacterMove : MonoBehaviour
 
     void Start()
     {
-        finished = false;
+        if (TransitionScreen.startGameplay == true)
+        {
+            finished = false;
         SetWalking(true);
         SetWorking(false);
+        }
+
+        
     }
 
     void Update()
     {
+
         if (finished) return;
         if (firstWaypoint == null || lastWaypoint == null) return;
 
         switch (state)
         {
             case State.MoveToFirst:
-                if (!isWorking)
+                if (!isWorking && TransitionScreen.startGameplay == true)
                 {
                     SetWalking(true);
                     MoveTo(firstWaypoint.position);

@@ -15,7 +15,7 @@ public class KissZone : MonoBehaviour
 
     public static bool isPressingZone;
 
-    private const float maxHoldTime = 2f;
+    private const float maxHoldTime = 7f;
     private const int maxScore = 10;
 
     void Start()

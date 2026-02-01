@@ -9,6 +9,7 @@ public class TransitionScreen : MonoBehaviour
     [SerializeField] Animator animator;
 
     private bool isTransitioning = false;
+    public static bool startGameplay = false;
 
     private void Start()
     {
@@ -37,10 +38,12 @@ public class TransitionScreen : MonoBehaviour
 
             yield return new WaitForSeconds(2.5f);
 
+            startGameplay = true;
+
             zone.SetActive(true);
             startScreen.SetActive(false);
         }
-
+        
         isTransitioning = false;
     }
 }
