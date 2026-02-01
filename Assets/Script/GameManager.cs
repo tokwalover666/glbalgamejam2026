@@ -127,7 +127,7 @@ public class GameManager : MonoBehaviour
         int minutes = Mathf.FloorToInt(t / 60f);
         int seconds = Mathf.FloorToInt(t % 60f);
 
-        timerText.text = $"{minutes:00}:{seconds:00}";
+        timerText.text = $"{minutes:0}:{seconds:00}";
     }
 
     // =========================
