@@ -17,7 +17,7 @@ public class BoxSpawner : MonoBehaviour
     public TopViewPanelUI ui;
 
     [Header("Limit")]
-    public int maxBoxesToSpawn = 10;  // ✅ change this in inspector
+    public int maxBoxesToSpawn = 10;
 
     [Header("Debug")]
     public bool debugLogs = true;
@@ -32,9 +32,7 @@ public class BoxSpawner : MonoBehaviour
     public void EnableSpawning()
     {
         canSpawn = true;
-
-        // Spawn the first box immediately
-        TrySpawnNext();
+        TrySpawnNext(); // spawn first box immediately
     }
 
     void TrySpawnNext()
@@ -80,8 +78,9 @@ public class BoxSpawner : MonoBehaviour
 
         currentBox.Init(checkpointWaypoint, finalWaypoint, ui);
 
-        // ✅ listen for completion
+        // ✅ subscribe + cache so swap still triggers spawner
         currentBox.OnReachedFinal += HandleBoxReachedFinal;
+        currentBox.CacheReachedFinalHandler(HandleBoxReachedFinal); // ✅ IMPORTANT FIX
 
         spawnedCount++;
 
@@ -100,15 +99,12 @@ public class BoxSpawner : MonoBehaviour
         if (debugLogs)
             Debug.Log($"[BoxSpawner] Box completed! completed={completedCount}, spawned={spawnedCount}");
 
-        // Clear current ref if it’s the same box
         if (currentBox == box)
             currentBox = null;
 
-        // Spawn next one
         TrySpawnNext();
     }
 
-    // Optional getters if you want UI display
     public int GetSpawnedCount() => spawnedCount;
     public int GetCompletedCount() => completedCount;
 

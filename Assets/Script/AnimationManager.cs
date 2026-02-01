@@ -23,7 +23,7 @@ public class AnimationManager : MonoBehaviour
         else
         {
             girlAnim.Play("Idle_Girl");
-            boyAnim.Play("Idle_001");
+            //boyAnim.Play("Idle_001");
         }
 
     }

@@ -26,7 +26,11 @@ public class BoxMove : MonoBehaviour
 
     public BoxState state = BoxState.MoveToCheckpoint;
 
+    // Spawner subscribes to this
     public event Action<BoxMove> OnReachedFinal;
+
+    // ✅ store handler so we can reattach it after swap
+    private Action<BoxMove> cachedReachedFinalHandler;
 
     public void Init(Transform checkpointTarget, Transform finalTarget, TopViewPanelUI uiRef)
     {
@@ -34,6 +38,12 @@ public class BoxMove : MonoBehaviour
         finalPoint = finalTarget;
         ui = uiRef;
         state = BoxState.MoveToCheckpoint;
+    }
+
+    // ✅ Spawner calls this after subscribing so swaps keep working
+    public void CacheReachedFinalHandler(Action<BoxMove> handler)
+    {
+        cachedReachedFinalHandler = handler;
     }
 
     void Update()
@@ -92,8 +102,8 @@ public class BoxMove : MonoBehaviour
     }
 
     /// <summary>
-    /// Swap THIS box instance into the completed prefab, at the same position/rotation,
-    /// and continue moving to final.
+    /// Swap THIS box into completed prefab and continue moving to final.
+    /// IMPORTANT: re-attach spawner handler to the new box.
     /// </summary>
     public void SwapToCompletedPrefabAndContinue()
     {
@@ -108,16 +118,21 @@ public class BoxMove : MonoBehaviour
         Quaternion rot = transform.rotation;
         Transform parent = transform.parent;
 
-        // Spawn the completed box at the same spot
         GameObject newBox = Instantiate(completedBoxPrefab, pos, rot, parent);
 
-        // Copy movement targets into the new one
         BoxMove newMove = newBox.GetComponent<BoxMove>();
         if (newMove != null)
         {
             newMove.Init(checkpoint, finalPoint, ui);
 
-            // Force it to continue to final (skip waiting)
+            // ✅ keep spawner callback alive after swap
+            if (cachedReachedFinalHandler != null)
+            {
+                newMove.OnReachedFinal += cachedReachedFinalHandler;
+                newMove.CacheReachedFinalHandler(cachedReachedFinalHandler);
+            }
+
+            // Skip waiting, go straight to final
             newMove.state = BoxState.MoveToFinal;
             ui?.HideBoth();
         }
