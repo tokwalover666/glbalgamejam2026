@@ -4,8 +4,8 @@
 public class CharacterMove : MonoBehaviour
 {
     [Header("Waypoints")]
-    public Transform firstWaypoint;   // go here first
-    public Transform lastWaypoint;    // final destination
+    public Transform firstWaypoint;
+    public Transform lastWaypoint;
 
     [Header("Movement")]
     public float moveSpeed = 3f;
@@ -18,9 +18,12 @@ public class CharacterMove : MonoBehaviour
     [Header("Animation")]
     public Animator animator;
 
-    // Animator parameters
-    public string isWalkingBool = "IsWalking";
-    public string isWorkingBool = "IsWorking";
+    // IMPORTANT: These must match Animator parameters (case-sensitive)
+    public string isWalkingBool = "isWalking";
+    public string isWorkingBool = "isWorking";
+
+    [Header("Debug")]
+    public bool debugLogs = false;
 
     public bool finished { get; private set; }
 
@@ -41,8 +44,12 @@ public class CharacterMove : MonoBehaviour
         if (animator == null)
             animator = GetComponent<Animator>();
 
-        // Prevent animation from overriding transform motion
-        animator.applyRootMotion = false;
+        if (animator != null)
+            animator.applyRootMotion = false;
+
+        // ✅ Auto-fix parameter name if your Animator uses different casing (ex: IsWorking vs isWorking)
+        isWalkingBool = ResolveAnimatorBoolName(isWalkingBool);
+        isWorkingBool = ResolveAnimatorBoolName(isWorkingBool);
     }
 
     void Start()
@@ -71,6 +78,7 @@ public class CharacterMove : MonoBehaviour
                 break;
 
             case State.RotateAtFirst:
+                // Rotation phase: stop walking (still not "working")
                 SetWalking(false);
                 RotateToTarget();
 
@@ -102,29 +110,25 @@ public class CharacterMove : MonoBehaviour
     }
 
     // =====================
-    // Public API (IMPORTANT)
+    // Public API
     // =====================
 
-    /// <summary>
-    /// Called by HoldToProgressTimer
-    /// </summary>
     public void SetWorking(bool working)
     {
         if (isWorking == working) return;
-
         isWorking = working;
 
-        if (animator != null)
+        if (animator != null && !string.IsNullOrEmpty(isWorkingBool))
             animator.SetBool(isWorkingBool, working);
 
         // Stop walking animation while working
         if (working)
             SetWalking(false);
+
+        if (debugLogs)
+            Debug.Log($"[CharacterMove] SetWorking({working}) | workingParam='{isWorkingBool}'");
     }
 
-    /// <summary>
-    /// Used by CharacterMoveB to check if player is safe
-    /// </summary>
     public bool IsWorking()
     {
         return isWorking;
@@ -166,7 +170,39 @@ public class CharacterMove : MonoBehaviour
 
     void SetWalking(bool walking)
     {
-        if (animator == null) return;
+        if (animator == null || string.IsNullOrEmpty(isWalkingBool)) return;
         animator.SetBool(isWalkingBool, walking);
+
+        if (debugLogs)
+            Debug.Log($"[CharacterMove] SetWalking({walking}) | walkingParam='{isWalkingBool}'");
+    }
+
+    // ✅ Finds correct bool name even if casing differs
+    string ResolveAnimatorBoolName(string desiredName)
+    {
+        if (animator == null || string.IsNullOrEmpty(desiredName))
+            return desiredName;
+
+        // Exact match
+        foreach (var p in animator.parameters)
+        {
+            if (p.type == AnimatorControllerParameterType.Bool && p.name == desiredName)
+                return desiredName;
+        }
+
+        // Case-insensitive match
+        foreach (var p in animator.parameters)
+        {
+            if (p.type != AnimatorControllerParameterType.Bool) continue;
+
+            if (string.Equals(p.name, desiredName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                Debug.LogWarning($"[CharacterMove] Animator bool '{desiredName}' not found. Using '{p.name}' instead.");
+                return p.name;
+            }
+        }
+
+        Debug.LogWarning($"[CharacterMove] Animator bool '{desiredName}' not found at all. Working/Walking may not animate.");
+        return desiredName;
     }
 }

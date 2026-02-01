@@ -4,7 +4,7 @@
 public class CharacterMoveB : MonoBehaviour
 {
     [Header("Wait for Character A to finish first")]
-    public CharacterMove characterA; // Character A script (must have finished + IsWorking())
+    public CharacterMove characterA;
 
     [Header("Waypoints")]
     public Transform firstWaypoint;
@@ -20,14 +20,22 @@ public class CharacterMoveB : MonoBehaviour
     public Vector3 secondRotateEuler = new Vector3(0, 0, 0);
     public float rotationSpeed = 180f;
 
-    [Header("Loop Range (public i range)")]
+    [Header("End Rotation (used before new route starts)")]
+    public Vector3 endRotateEuler = new Vector3(0, 180, 0);
+    public float endRotationSpeed = 180f;
+
+    [Header("Loop Range")]
     public int minExtraLoops = 1;
     public int maxExtraLoops = 5;
 
     [Header("Delays")]
-    public float afterFirstRunDelay = 5f;  // wait AFTER first full route, systems start during this wait
-    public float minWaitAtLast = 3f;        // wait at last waypoint (min)
-    public float maxWaitAtLast = 5f;        // wait at last waypoint (max)
+    public float afterFirstRunDelay = 5f;
+    public float minWaitAtLast = 3f;
+    public float maxWaitAtLast = 5f;
+
+    [Header("Spot Check - Working Requirement")]
+    public float checkDuration = 5f;
+    public float requiredWorkingTime = 3f;
 
     [Header("Animation")]
     public Animator animator;
@@ -35,35 +43,43 @@ public class CharacterMoveB : MonoBehaviour
     public string spottedTrigger = "Spotted";
 
     [Header("GameManager")]
-    public GameManager gameManager; // must have StartGameplaySystems() + TriggerLose()
+    public GameManager gameManager;
 
     [Header("Debug")]
     public bool debugLogs = false;
 
-    // Public read
-    public int i { get; private set; }                 // loops remaining (after-first-run only)
-    public bool firstRunCompleted { get; private set; } // true after the first route is done
+    public int i { get; private set; }
+    public bool firstRunCompleted { get; private set; }
 
-    // Internal
     private Quaternion rot1;
     private Quaternion rot2;
+    private Quaternion endRot;
 
     private float timer;
     private float currentWait;
     private bool lastIsMoving;
     private bool systemsStarted = false;
 
+    private float checkTimer = 0f;
+    private float workingTimer = 0f;
+
+    private bool checkPassedThisLoop = false;
+    private bool firstArrivalHandled = false;
+
     private enum State
     {
         WaitingForA,
         MoveToFirst,
-        CheckAtFirst,        // only after first run
+        CheckAtFirst,
         Rotate1,
         WaitBetween,
         Rotate2,
         MoveToLast,
-        WaitAfterLast,       // every time at last waypoint (3-5s)
-        WaitAfterFirstRun,   // after first full route (5s) and systems start here
+        WaitAfterLast,
+        WaitAfterFirstRun,
+
+        RotateToEndBeforeRoute, // ✅ NEW: rotate before starting a new route
+
         OnLoopEnd,
         Lose
     }
@@ -75,11 +91,11 @@ public class CharacterMoveB : MonoBehaviour
         if (animator == null)
             animator = GetComponent<Animator>();
 
-        if (animator != null)
-            animator.applyRootMotion = false;
+        animator.applyRootMotion = false;
 
         rot1 = Quaternion.Euler(firstRotateEuler);
         rot2 = Quaternion.Euler(secondRotateEuler);
+        endRot = Quaternion.Euler(endRotateEuler);
 
         SetIsMoving(false);
     }
@@ -92,21 +108,24 @@ public class CharacterMoveB : MonoBehaviour
 
     void Update()
     {
-        // Update rotation targets (so you can tweak in inspector while playing)
+        // live tweak support
         rot1 = Quaternion.Euler(firstRotateEuler);
         rot2 = Quaternion.Euler(secondRotateEuler);
+        endRot = Quaternion.Euler(endRotateEuler);
+
+        // Reset arrival latch only when far enough away from first waypoint
+        if (firstWaypoint != null &&
+            Vector3.Distance(transform.position, firstWaypoint.position) > arriveDistance * 2f)
+        {
+            firstArrivalHandled = false;
+        }
 
         switch (state)
         {
             case State.WaitingForA:
                 SetIsMoving(false);
-
-                // ✅ Character B only starts when Character A finishes
                 if (characterA != null && characterA.finished)
-                {
                     state = State.MoveToFirst;
-                    Log("A finished -> B starts MoveToFirst");
-                }
                 break;
 
             case State.MoveToFirst:
@@ -115,26 +134,51 @@ public class CharacterMoveB : MonoBehaviour
 
                 MoveTo(firstWaypoint.position);
 
-                if (Arrived(firstWaypoint.position))
+                if (!firstArrivalHandled && Arrived(firstWaypoint.position))
                 {
+                    firstArrivalHandled = true;
                     SetIsMoving(false);
 
-                    // ✅ First run = no check
-                    // ✅ After-first-run = check Character A IsWorking
-                    state = firstRunCompleted ? State.CheckAtFirst : State.Rotate1;
-                    Log(firstRunCompleted ? "Arrived First -> CheckAtFirst" : "Arrived First -> Rotate1 (first run, no check)");
+                    if (!firstRunCompleted)
+                    {
+                        state = State.Rotate1;
+                    }
+                    else
+                    {
+                        if (!checkPassedThisLoop)
+                        {
+                            checkTimer = 0f;
+                            workingTimer = 0f;
+                            state = State.CheckAtFirst;
+                        }
+                        else
+                        {
+                            state = State.Rotate1;
+                        }
+                    }
                 }
                 break;
 
             case State.CheckAtFirst:
                 SetIsMoving(false);
 
-                if (characterA != null && characterA.IsWorking())
+                if (characterA == null)
                 {
-                    state = State.Rotate1; // keep same routine
-                    Log("A IsWorking TRUE -> Rotate1");
+                    TriggerSpottedAndLose();
+                    break;
                 }
-                else
+
+                checkTimer += Time.deltaTime;
+
+                if (characterA.IsWorking())
+                    workingTimer += Time.deltaTime;
+
+                if (workingTimer >= requiredWorkingTime)
+                {
+                    checkPassedThisLoop = true;
+                    state = State.Rotate1;
+                }
+                else if (checkTimer >= checkDuration)
                 {
                     TriggerSpottedAndLose();
                 }
@@ -142,13 +186,12 @@ public class CharacterMoveB : MonoBehaviour
 
             case State.Rotate1:
                 SetIsMoving(false);
-                RotateTowards(rot1);
+                RotateTowards(rot1, rotationSpeed);
 
                 if (RotationFinished(rot1))
                 {
                     timer = 0f;
                     state = State.WaitBetween;
-                    Log("Rotate1 done -> WaitBetween");
                 }
                 break;
 
@@ -157,21 +200,15 @@ public class CharacterMoveB : MonoBehaviour
                 timer += Time.deltaTime;
 
                 if (timer >= waitBetweenRotations)
-                {
                     state = State.Rotate2;
-                    Log("WaitBetween done -> Rotate2");
-                }
                 break;
 
             case State.Rotate2:
                 SetIsMoving(false);
-                RotateTowards(rot2);
+                RotateTowards(rot2, rotationSpeed);
 
                 if (RotationFinished(rot2))
-                {
                     state = State.MoveToLast;
-                    Log("Rotate2 done -> MoveToLast");
-                }
                 break;
 
             case State.MoveToLast:
@@ -187,8 +224,6 @@ public class CharacterMoveB : MonoBehaviour
                     timer = 0f;
                     currentWait = Random.Range(minWaitAtLast, maxWaitAtLast);
                     state = State.WaitAfterLast;
-
-                    Log($"Arrived Last -> WaitAfterLast ({currentWait:F1}s)");
                 }
                 break;
 
@@ -199,7 +234,6 @@ public class CharacterMoveB : MonoBehaviour
                 if (timer >= currentWait)
                 {
                     state = State.OnLoopEnd;
-                    Log("WaitAfterLast done -> OnLoopEnd");
                 }
                 break;
 
@@ -208,36 +242,31 @@ public class CharacterMoveB : MonoBehaviour
 
                 if (!firstRunCompleted)
                 {
-                    // ✅ First full route just finished
+                    // ✅ First full route ended
                     firstRunCompleted = true;
 
-                    // ✅ Start spawner + hold timer + countdown DURING the 5s delay
                     if (!systemsStarted)
                     {
                         systemsStarted = true;
                         gameManager?.StartGameplaySystems();
-                        Log("Systems started (during afterFirstRunDelay)");
                     }
 
+                    // Delay before looping
                     timer = 0f;
                     state = State.WaitAfterFirstRun;
-                    Log("First run complete -> WaitAfterFirstRun");
                 }
                 else
                 {
-                    // ✅ After-first-run loops
+                    // loop count
                     i--;
-
-                    Log($"Loop ended. i now={i}");
 
                     if (i > 0)
                     {
-                        state = State.MoveToFirst;
-                        Log("Repeat -> MoveToFirst");
+                        // ✅ before starting new route, rotate to end
+                        state = State.RotateToEndBeforeRoute;
                     }
                     else
                     {
-                        Log("No more loops. Character B stops.");
                         enabled = false;
                     }
                 }
@@ -249,23 +278,32 @@ public class CharacterMoveB : MonoBehaviour
 
                 if (timer >= afterFirstRunDelay)
                 {
-                    // ✅ Now activate the after-first-run looping count
+                    // ✅ activate looping count
                     i = Random.Range(minExtraLoops, maxExtraLoops + 1);
 
-                    Log($"afterFirstRunDelay done -> i randomized = {i} -> MoveToFirst");
+                    // ✅ before starting first loop route, rotate to end
+                    state = State.RotateToEndBeforeRoute;
+                }
+                break;
+
+            case State.RotateToEndBeforeRoute:
+                SetIsMoving(false);
+                RotateTowards(endRot, endRotationSpeed);
+
+                if (RotationFinished(endRot))
+                {
+                    // reset per-loop flags before starting the route again
+                    checkPassedThisLoop = false;
+                    firstArrivalHandled = false;
+
                     state = State.MoveToFirst;
                 }
                 break;
 
             case State.Lose:
-                // locked
                 break;
         }
     }
-
-    // =====================
-    // Lose
-    // =====================
 
     void TriggerSpottedAndLose()
     {
@@ -275,14 +313,8 @@ public class CharacterMoveB : MonoBehaviour
             animator.SetTrigger(spottedTrigger);
 
         gameManager?.TriggerLose();
-
         state = State.Lose;
-        Log("Spotted -> Lose");
     }
-
-    // =====================
-    // Helpers
-    // =====================
 
     void MoveTo(Vector3 target)
     {
@@ -298,12 +330,12 @@ public class CharacterMoveB : MonoBehaviour
         return Vector3.Distance(transform.position, target) <= arriveDistance;
     }
 
-    void RotateTowards(Quaternion targetRot)
+    void RotateTowards(Quaternion targetRot, float speed)
     {
         transform.rotation = Quaternion.RotateTowards(
             transform.rotation,
             targetRot,
-            rotationSpeed * Time.deltaTime
+            speed * Time.deltaTime
         );
     }
 
@@ -319,11 +351,5 @@ public class CharacterMoveB : MonoBehaviour
 
         lastIsMoving = moving;
         animator.SetBool(isMovingBool, moving);
-    }
-
-    void Log(string msg)
-    {
-        if (debugLogs)
-            Debug.Log("[CharacterMoveB] " + msg);
     }
 }

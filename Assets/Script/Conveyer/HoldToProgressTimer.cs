@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class HoldToProgressTimer : MonoBehaviour
 {
@@ -39,9 +39,11 @@ public class HoldToProgressTimer : MonoBehaviour
 
             if (debugLogs) Debug.Log("[HOLD] FINISHED -> hide UI + box GoToFinal");
 
-            ui?.HideBoth();        // hide panel
-            boxMove.GoToFinal();   // move box again
+            characterA?.SetWorking(false);   // ✅ stop working when done
+            ui?.HideBoth();
+            boxMove.GoToFinal();
         }
+
     }
 
     public void OnHoldStart()

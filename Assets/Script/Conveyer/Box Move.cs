@@ -1,5 +1,6 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
+using UnityEngine;
+using UnityEngine.TextCore.Text;
 
 public class BoxMove : MonoBehaviour
 {
@@ -13,6 +14,8 @@ public class BoxMove : MonoBehaviour
 
     [Header("UI Panels")]
     public TopViewPanelUI ui;
+
+    public CharacterMove character;
 
     public enum BoxState
     {
@@ -52,8 +55,12 @@ public class BoxMove : MonoBehaviour
                 break;
 
             case BoxState.Wait:
-                // waits until button calls GoToFinal()
+                if (character != null)
+                {
+
+                }
                 break;
+
 
             case BoxState.MoveToFinal:
                 Move(finalPoint.position);
