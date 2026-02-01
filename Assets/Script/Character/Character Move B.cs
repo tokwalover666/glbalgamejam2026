@@ -161,12 +161,23 @@ public class CharacterMoveB : MonoBehaviour
 
             case State.CheckAtFirst:
                 SetIsMoving(false);
-
+                bool IsFacingPositiveX(Transform t)
+                {
+                    return Vector3.Dot(t.right, Vector3.right) > 0.9f;
+                }
                 if (characterA == null)
                 {
                     TriggerSpottedAndLose();
                     break;
                 }
+
+                if (KissZone.isPressingZone && IsFacingPositiveX(characterA.transform))
+                {
+                    TriggerSpottedAndLose();
+                    Debug.Log("ispressingzone+boss is near");
+                    break;
+                }
+
 
                 checkTimer += Time.deltaTime;
 
@@ -183,6 +194,9 @@ public class CharacterMoveB : MonoBehaviour
                     TriggerSpottedAndLose();
                 }
                 break;
+
+
+
 
             case State.Rotate1:
                 SetIsMoving(false);

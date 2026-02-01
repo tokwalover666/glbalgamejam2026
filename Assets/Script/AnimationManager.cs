@@ -15,7 +15,7 @@ public class AnimationManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (kissZone.isPressingZone == true)
+        if (KissZone.isPressingZone == true)
         {
             girlAnim.Play("Kiss_Girl");
             boyAnim.Play("Kiss Boy");
