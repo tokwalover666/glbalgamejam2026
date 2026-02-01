@@ -48,7 +48,6 @@ public class BoxChecker : MonoBehaviour
 
         marker.counted = true;
 
-        boxesCount++;
         UpdateUI();
 
         if (debugLogs)
