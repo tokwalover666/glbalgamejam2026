@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
 
 public class BoxChecker : MonoBehaviour
@@ -6,13 +6,13 @@ public class BoxChecker : MonoBehaviour
     [Header("Win Condition")]
     public int boxesToWin = 10;
 
-    [Header("UI ( reopening)")]
-    public TMP_Text countText;          // optional: show "3/10"
-    public GameObject winPanel;         // optional: show a win panel
+    [Header("UI")]
+    public TMP_Text countText;      // shows "3/10"
+    public GameObject winPanel;     // shows win panel
 
     [Header("Detection")]
-    public string boxTag = "Box";       // tag your box prefabs as "Box"
-    public bool requireTag = true;      // turn off if you prefer layer check instead
+    public string boxTag = "Box";   // tag your box prefabs as "Box"
+    public bool requireTag = true;  // if false, it counts anything entering
 
     [Header("Debug")]
     public bool debugLogs = true;
@@ -24,6 +24,9 @@ public class BoxChecker : MonoBehaviour
     {
         if (winPanel != null) winPanel.SetActive(false);
         UpdateUI();
+
+        if (debugLogs)
+            Debug.Log($"[BoxChecker] START | count={boxesCount}/{boxesToWin} | triggerObj={gameObject.name}");
     }
 
     private void OnTriggerEnter(Collider other)
@@ -31,22 +34,20 @@ public class BoxChecker : MonoBehaviour
         if (won) return;
 
         // Filter: only count boxes
-        if (requireTag)
-        {
-            if (!other.CompareTag(boxTag)) return;
-        }
+        if (requireTag && !other.CompareTag(boxTag))
+            return;
 
-        // Prevent double-counting the same box if it re-enters the trigger
-        // by marking it once it�s counted.
+        // Prevent double-counting the same box
         CountedOnce marker = other.GetComponent<CountedOnce>();
         if (marker == null)
-        {
             marker = other.gameObject.AddComponent<CountedOnce>();
-        }
 
         if (marker.counted) return;
 
         marker.counted = true;
+
+        // ✅ FIX: increment count
+        boxesCount++;
 
         UpdateUI();
 
@@ -54,9 +55,7 @@ public class BoxChecker : MonoBehaviour
             Debug.Log($"[BoxChecker] Counted box: {boxesCount}/{boxesToWin} ({other.name})");
 
         if (boxesCount >= boxesToWin)
-        {
             Win();
-        }
     }
 
     void Win()
@@ -87,6 +86,9 @@ public class BoxChecker : MonoBehaviour
 
         if (winPanel != null) winPanel.SetActive(false);
         UpdateUI();
+
+        if (debugLogs)
+            Debug.Log("[BoxChecker] ResetCounter()");
     }
 
     public int GetCount() => boxesCount;
